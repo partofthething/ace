@@ -32,7 +32,7 @@ class Smoother(object):
         self.smooth_result = []
         self.cross_validated_residual = None
         self.window_size = None
-        # self._original_index_of_xvalue = []  # for dealing w/ unsoted data
+        self._original_index_of_xvalue = []  # for dealing w/ unsorted data
 
     def add_data_point_xy(self, x, y):
         """
@@ -62,7 +62,7 @@ class Smoother(object):
         xy = zip(self._x, self._y)
         xy.sort()
         x, y = zip(*xy)  # pylint: disable=star-args
-        # self._original_index_of_xvalue = [list(self._x).index(xi) for xi in x]
+        self._original_index_of_xvalue = [list(self._x).index(xi) for xi in x]
         return numpy.array(x), numpy.array(y)
 
     def compute(self):
@@ -113,7 +113,9 @@ class BasicFixedSpanSmoother(Smoother):
             if i - self.window_size / 2.0 > 0.0 and i + self.window_size / 2.0 <= len(x):
                 window_bound_lower += 1
 
-        self.smooth_result = numpy.array(smooth)
+        self.smooth_result = numpy.zeros(len(self._y))
+        for i, smoothVal in enumerate(smooth):
+            self.smooth_result[self._original_index_of_xvalue[i]] = smoothVal
         self.cross_validated_residual = numpy.array(residual)
 
     def _compute_window_size(self):

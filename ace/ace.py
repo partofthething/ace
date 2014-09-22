@@ -49,7 +49,7 @@ class ACESolver(object):
     def solve(self):
         self._initialize()
         iters = 1
-        while self._outer_error_is_decreasing() and iters < 10:
+        while self._outer_error_is_decreasing() and iters < 100:
             print('* Starting outer iteration {0:03d}. Current err = {1:12.5E}'
                   ''.format(iters, self._last_outer_error))
             self._iterate_to_update_x_transforms()
@@ -85,7 +85,7 @@ class ACESolver(object):
     def _iterate_to_update_x_transforms(self):
         iters = 1
         self._last_inner_error = float('inf')
-        while self._inner_error_is_decreasing() and iters < 10:
+        while self._inner_error_is_decreasing():
             print('  Starting inner iteration {0:03d}. Current err = {1:12.5E}'
                   ''.format(iters, self._last_inner_error))
             self._update_x_transforms()
