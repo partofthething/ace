@@ -28,12 +28,6 @@ class TestAce(unittest.TestCase):
         y = numpy.log(4.0 + numpy.sin(4 * x[0]) + numpy.abs(x[1]) + x[2] ** 2 +
                      x[3] ** 3 + x[4] + 0.1 * numpy.random.standard_normal(N))
 
-        pylab.figure()
-        for i in range(5):
-            pylab.subplot(2, 3, i + 1)
-            pylab.plot(x[i], y, '.', label='xi'.format(i))
-        pylab.show()
-
         ace_solver._x = x
         ace_solver._y = y
         ace_solver.solve()

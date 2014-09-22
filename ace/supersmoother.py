@@ -27,7 +27,7 @@ class SuperSmoother(smoother.Smoother):
         self._enhanced_spans = []
         self._smoothed_best_spans = []
 
-        self._bass_enhancement = 2.0  # should be between 0 and 10.
+        self._bass_enhancement = 5.0  # should be between 0 and 10.
 
     def compute(self):
 
@@ -80,7 +80,7 @@ class SuperSmoother(smoother.Smoother):
 
             self._enhanced_spans.append(best_window_size +
                                         (bass_window_size -
-                                        best_window_size) ** ri ** (10.0 - self._bass_enhancement))
+                                        best_window_size) * ri ** (10.0 - self._bass_enhancement))
 
     def _smooth_best_span_estimates(self):
         self._smoothed_best_spans = smoother.perform_smooth(
