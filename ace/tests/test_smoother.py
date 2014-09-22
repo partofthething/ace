@@ -31,12 +31,12 @@ class TestSmoothers(unittest.TestCase):
         """
 
         for span in ace.smoother.DEFAULT_SPANS:
-            smoother = ace.smoother.perform_basic_smooth(self.x, self.y, span)
+            smoother = ace.smoother.perform_smooth(self.x, self.y, span)
             pylab.plot(self.x, smoother.smooth_result, label='Span = {0}'.format(span))
         finish_plot()
 
     def test_supersmoother(self):
-        smoother = ace.smoother.perform_basic_smooth(
+        smoother = ace.smoother.perform_smooth(
                                  self.x, self.y,
                                  smoother_class=ace.supersmoother.SuperSmoother)
         pylab.plot(self.x, smoother.smooth_result, label='Supersmoother')

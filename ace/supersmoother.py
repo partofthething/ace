@@ -8,12 +8,12 @@ Based on [1]
 '''
 import numpy
 
-import ace.smoother
-from ace.smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN
+from . import smoother
+from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN
 
 BASS_INDEX = DEFAULT_SPANS.index(BASS_SPAN)
 
-class SuperSmoother(ace.smoother.Smoother):
+class SuperSmoother(smoother.Smoother):
     '''
     Variable-span smoother
     '''
@@ -27,7 +27,7 @@ class SuperSmoother(ace.smoother.Smoother):
         self._enhanced_spans = []
         self._smoothed_best_spans = []
 
-        self._bass_enhancement = 1.0  # should be between 0 and 10.
+        self._bass_enhancement = 2.0  # should be between 0 and 10.
 
     def compute(self):
 
@@ -41,7 +41,7 @@ class SuperSmoother(ace.smoother.Smoother):
     def _compute_primary_smooths(self):
 
         for span in DEFAULT_SPANS:
-            smooth = ace.smoother.perform_basic_smooth(self._x, self._y, span)
+            smooth = smoother.perform_smooth(self._x, self._y, span)
             self._primary_smooths.append(smooth)
 
     def _smooth_the_residuals(self):
@@ -51,7 +51,7 @@ class SuperSmoother(ace.smoother.Smoother):
         |r_{i}(J)| against xi" - [1]
         """
         for primary_smooth in self._primary_smooths:
-            smooth = ace.smoother.perform_basic_smooth(
+            smooth = smoother.perform_smooth(
                                self._x,
                                numpy.abs(primary_smooth.cross_validated_residual),
                                MID_SPAN)
@@ -83,7 +83,7 @@ class SuperSmoother(ace.smoother.Smoother):
                                         best_window_size) ** ri ** (10.0 - self._bass_enhancement))
 
     def _smooth_best_span_estimates(self):
-        self._smoothed_best_spans = ace.smoother.perform_basic_smooth(
+        self._smoothed_best_spans = smoother.perform_smooth(
                                self._x, self._enhanced_spans, MID_SPAN)
 
     def _apply_best_spans_to_primaries(self):
@@ -92,4 +92,6 @@ class SuperSmoother(ace.smoother.Smoother):
             primary_values = [s.smooth_result[xi] for s in self._primary_smooths]
             best_value = numpy.interp(best_window_size, window_sizes, primary_values)
             self.smooth_result.append(best_value)
+
+        self.smooth_result = numpy.array(self.smooth_result)
 

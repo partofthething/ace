@@ -6,6 +6,7 @@ Python port of J. Friedman's 1984 smoother
 '''
 
 import numpy
+import pylab
 
 TWEETER_SPAN = 0.05
 MID_SPAN = 0.2
@@ -31,6 +32,7 @@ class Smoother(object):
         self.smooth_result = []
         self.cross_validated_residual = None
         self.window_size = None
+        # self._original_index_of_xvalue = []  # for dealing w/ unsoted data
 
     def add_data_point_xy(self, x, y):
         """
@@ -60,10 +62,16 @@ class Smoother(object):
         xy = zip(self._x, self._y)
         xy.sort()
         x, y = zip(*xy)  # pylint: disable=star-args
+        # self._original_index_of_xvalue = [list(self._x).index(xi) for xi in x]
         return numpy.array(x), numpy.array(y)
 
     def compute(self):
         raise NotImplementedError
+
+    def plot(self):
+        pylab.figure()
+        pylab.plot(self._x, self.smooth_result)
+        pylab.show()
 
 class BasicFixedSpanSmoother(Smoother):
     """
@@ -108,7 +116,6 @@ class BasicFixedSpanSmoother(Smoother):
         self.smooth_result = numpy.array(smooth)
         self.cross_validated_residual = numpy.array(residual)
 
-
     def _compute_window_size(self):
         self.window_size = int(len(self._x) * self._span)  # number of nearest neighbors
 
@@ -144,7 +151,7 @@ class BasicFixedSpanSmoother(Smoother):
                                          self._variance_in_window)
         return residual
 
-def perform_basic_smooth(x_values, y_values, span=0.0, smoother_class=BasicFixedSpanSmoother):
+def perform_smooth(x_values, y_values, span=0.0, smoother_class=BasicFixedSpanSmoother):
     """
     Convenience function to run the basic smoother
     """
