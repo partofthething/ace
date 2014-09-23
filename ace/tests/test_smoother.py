@@ -14,7 +14,53 @@ import pylab
 import ace.smoother
 import ace.supersmoother
 
-class TestSmoothers(unittest.TestCase):
+class TestSmoother(unittest.TestCase):
+    def setUp(self):
+        self.smoother = ace.smoother.BasicFixedSpanSmoother()
+        self.smoother.specify_data_set(range(5), range(5))
+        self.xData = [1.0, 2.0, 3.0]
+        self.yData = [4.0, 5.0, 6.0]
+        self.smoother._update_mean_in_window(self.xData, self.yData)
+        self.smoother.window_size = 3
+
+    def test_mean(self):
+
+        self.assertAlmostEqual(self.smoother._mean_x_in_window,
+                               sum(self.xData) / len(self.xData))
+
+        self.assertAlmostEqual(self.smoother._mean_y_in_window,
+                               sum(self.yData) / len(self.yData))
+
+    def test_mean_on_addition_of_observation(self):
+        """
+        Make sure things work when we add an observation
+        """
+        self.smoother._add_observation_to_means(7, 8)
+
+        self.assertAlmostEqual(self.smoother._mean_x_in_window,
+                               (sum(self.xData) + 7.0) /
+                               (self.smoother.window_size + 1.0))
+
+        self.assertAlmostEqual(self.smoother._mean_y_in_window,
+                               (sum(self.yData) + 8.0) /
+                               (self.smoother.window_size + 1.0))
+
+    def test_mean_on_removal_of_observation(self):
+        """
+        Make sure things work when we remove an observation
+        """
+        self.smoother._remove_observation_from_means(3, 6)
+
+        self.assertAlmostEqual(self.smoother._mean_x_in_window,
+                               sum(self.xData[:2]) /
+                               (self.smoother.window_size - 1.0))
+
+        self.assertAlmostEqual(self.smoother._mean_y_in_window,
+                               (sum(self.yData[:2])) /
+                               (self.smoother.window_size - 1.0))
+
+
+class TestProblemSmoothers(unittest.TestCase):
 
     def setUp(self):
         N = 200
@@ -25,6 +71,7 @@ class TestSmoothers(unittest.TestCase):
         pylab.figure()
         pylab.plot(self.x, self.y, '.', label='Data')
 
+    @unittest.skip('Plots stuff')
     def test_basic_smoother(self):
         """
         Runs Friedman's test from Figure 2b. 
@@ -35,6 +82,7 @@ class TestSmoothers(unittest.TestCase):
             pylab.plot(self.x, smoother.smooth_result, label='Span = {0}'.format(span))
         finish_plot()
 
+    @unittest.skip('Plots stuff')
     def test_supersmoother(self):
         smoother = ace.smoother.perform_smooth(
                                  self.x, self.y,
