@@ -25,8 +25,8 @@ class Smoother(object):
 
         self._mean_x_in_window = 0.0
         self._mean_y_in_window = 0.0
-        self.__covariance_in_window = 0.0
-        self.__variance_in_window = 0.0
+        self._covariance_in_window = 0.0
+        self._variance_in_window = 0.0
 
         self._span = None
         self.smooth_result = []
@@ -62,7 +62,8 @@ class Smoother(object):
         xy = zip(self._x, self._y)
         xy.sort()
         x, y = zip(*xy)  # pylint: disable=star-args
-        self._original_index_of_xvalue = [list(self._x).index(xi) for xi in x]
+        x_list = list(self._x)
+        self._original_index_of_xvalue = [x_list.index(xi) for xi in x]
         return numpy.array(x), numpy.array(y)
 
     def compute(self):
@@ -97,13 +98,11 @@ class BasicFixedSpanSmoother(Smoother):
 
         # step through x and y data with a window window_size wide.
         window_bound_lower = 0
-        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
+        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y,
+                                                                            window_bound_lower)
         self._update_mean_in_window(x_values_in_window, y_values_in_window)
+        self._update_variance_in_window(x_values_in_window, y_values_in_window)
         for i, (xi, yi) in enumerate(zip(x, y)):
-
-
-            self._update_variance_in_window(x_values_in_window, y_values_in_window)
-
             smooth_here = self._compute_smooth_here(xi, yi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
             smooth.append(smooth_here)
@@ -111,11 +110,17 @@ class BasicFixedSpanSmoother(Smoother):
 
             if i - self.window_size / 2.0 > 0.0 and i + self.window_size / 2.0 <= len(x):
                 window_bound_lower += 1
-                self._remove_observation_from_means(x_values_in_window[0],
-                                                    y_values_in_window[0])
-                x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
-                self._add_observation_to_means(x_values_in_window[-1],
-                                               y_values_in_window[-1])
+                (x_values_in_window,
+                 y_values_in_window) = self._get_values_in_window(x, y, window_bound_lower)
+
+                (x_to_add, y_to_add) = x_values_in_window[-1], y_values_in_window[-1]
+                (x_to_remove, y_to_remove) = x_values_in_window[0], y_values_in_window[0]
+
+                self._remove_observation_to_variances(x_to_remove, y_to_remove)
+                self._remove_observation_from_means(x_to_remove, y_to_remove)
+
+                self._add_observation_to_means(x_to_add, y_to_add)
+                self._add_observation_to_variances(x_to_add, y_to_add)
 
         self.smooth_result = numpy.zeros(len(self._y))
         for i, smoothVal in enumerate(smooth):
@@ -160,6 +165,26 @@ class BasicFixedSpanSmoother(Smoother):
                                   (self.window_size - 1.0))
         self._mean_y_in_window = ((self.window_size * self._mean_y_in_window - yj) /
                                   (self.window_size - 1.0))
+
+    def _add_observation_to_variances(self, xj, yj):
+        """
+        Quickly update the variance and co-variance for the addition of one observation
+        """
+        self._covariance_in_window += ((self.window_size + 1.0) / self.window_size *
+                                       (xj - self._mean_x_in_window) *
+                                       (yj - self._mean_y_in_window))
+        self._variance_in_window += ((self.window_size + 1.0) / self.window_size *
+                                       (xj - self._mean_x_in_window) ** 2)
+
+    def _remove_observation_to_variances(self, xj, yj):
+        """
+        Quickly update the variance and co-variance for the deletion of one observation
+        """
+        self._covariance_in_window -= (self.window_size / (self.window_size - 1.0) *
+                                       (xj - self._mean_x_in_window) *
+                                       (yj - self._mean_y_in_window))
+        self._variance_in_window -= (self.window_size / (self.window_size - 1.0) *
+                                       (xj - self._mean_x_in_window) ** 2)
 
     def _compute_smooth_here(self, xi, yi):
         if self._variance_in_window:
