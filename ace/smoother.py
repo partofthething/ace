@@ -42,9 +42,11 @@ class Smoother(object):
         self._x.append(x)
         self._y.append(y)
 
-    def specify_data_set(self, xvalues, yvalues):
+    def specify_data_set(self, x_input, y_input):
         """
-        Fully define data by lists of x values and y values
+        Fully define data by lists of x values and y values. 
+        
+        This will sort them by increasing x but remember how to unsort them for providing results. 
 
         Parameters
         ----------
@@ -53,21 +55,19 @@ class Smoother(object):
         yValues : iterable
             list of floats that represent y(x) for each x
         """
-        self._x = xvalues
-        self._y = yvalues
+
+        xy = sorted(zip(x_input, y_input))
+        x, y = zip(*xy)  # pylint: disable=star-args
+        x_input_list = list(x_input)
+        self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
+        if len(set(self._original_index_of_xvalue)) != len(x):
+            raise RuntimeError('There are some non-unique original indices')
+
+        self._x = x
+        self._y = y
 
     def set_span(self, span):
         self._span = span
-
-    def get_dataset_sorted(self):
-        xy = zip(self._x, self._y)
-        xy.sort()
-        x, y = zip(*xy)  # pylint: disable=star-args
-        x_list = list(self._x)
-        self._original_index_of_xvalue = [x_list.index(xi) for xi in x]
-        if len(set(self._original_index_of_xvalue)) != len(x):
-            raise RuntimeError('There are some non-unique original indices')
-        return numpy.array(x), numpy.array(y)
 
     def compute(self):
         raise NotImplementedError
@@ -77,14 +77,18 @@ class Smoother(object):
         pylab.plot(self._x, self.smooth_result)
         pylab.show()
 
-    def _build_interpolator(self, x, y):
+    def _store_unsorted_results(self, smooth, residual):
         """
-        builds an intepolator from the results of the smooth to provide continuous values
+        Convert sorted smooth/residual back to as-input order
         """
-        self._interpolator = interp1d(x, y, bounds_error=False, fill_value=0.0)
+        self.smooth_result = numpy.zeros(len(self._y))
+        self.cross_validated_residual = numpy.zeros(len(residual))
+        for i, (smooth_val, residual_val) in enumerate(zip(smooth, residual)):
+            original_index = self._original_index_of_xvalue[i]
+            self.smooth_result[original_index] = smooth_val
+            self.cross_validated_residual[original_index] = residual_val
 
-    def evaluate(self, x):
-        return self._interpolator(x)
+
 
 class BasicFixedSpanSmoother(Smoother):
     """
@@ -95,31 +99,15 @@ class BasicFixedSpanSmoother(Smoother):
     Uses fast updates of means, variances. 
     """
 
-    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
-        x_to_remove, y_to_remove = x_values_in_last_window[0], y_values_in_last_window[0]
-
-        window_bound_lower += 1
-
-        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
-        x_to_add, y_to_add = x_values_in_window[-1], y_values_in_window[-1]
-
-        self._remove_observation_to_variances(x_to_remove, y_to_remove)
-        self._remove_observation_from_means(x_to_remove, y_to_remove)
-        self.window_size -= 1
-        self._add_observation_to_means(x_to_add, y_to_add)
-        self._add_observation_to_variances(x_to_add, y_to_add)
-        self.window_size += 1
-        return window_bound_lower, x_values_in_window, y_values_in_window
-
     def compute(self):
         """
-        
+        Perform the smoothing operations
         """
         self._compute_window_size()
         smooth = []
         residual = []
 
-        x, y = self.get_dataset_sorted()
+        x, y = self._x, self._y
 
         # step through x and y data with a window window_size wide.
         window_bound_lower = 0
@@ -128,21 +116,13 @@ class BasicFixedSpanSmoother(Smoother):
         self._update_mean_in_window(x_values_in_window, y_values_in_window)
         self._update_variance_in_window(x_values_in_window, y_values_in_window)
         for i, (xi, yi) in enumerate(zip(x, y)):
-
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
             smooth.append(smooth_here)
             residual.append(residual_here)
-
             if i - self.window_size / 2.0 > 0.0 and i + self.window_size / 2.0 <= len(x):
                 window_bound_lower, x_values_in_window, y_values_in_window = self._update_window(x, y, window_bound_lower, x_values_in_window, y_values_in_window)
-
-        self.smooth_result = numpy.zeros(len(self._y))
-        self.cross_validated_residual = numpy.zeros(len(residual))
-        for i, (smooth_val, residual_val) in enumerate(zip(smooth, residual)):
-            original_index = self._original_index_of_xvalue[i]
-            self.smooth_result[original_index] = smooth_val
-            self.cross_validated_residual[original_index] = residual_val
+        self._store_unsorted_results(smooth, residual)
 
     def _compute_window_size(self):
         self.window_size = int(len(self._x) * self._span)  # number of nearest neighbors
@@ -164,6 +144,32 @@ class BasicFixedSpanSmoother(Smoother):
 
         self._variance_in_window = sum([(xj - self._mean_x_in_window) ** 2 for xj
                                         in x_values_in_window])
+
+    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
+        """
+        Update values in current window and the current window means and variances. 
+        """
+        x_to_remove, y_to_remove = x_values_in_last_window[0], y_values_in_last_window[0]
+
+        window_bound_lower += 1
+
+        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
+        x_to_add, y_to_add = x_values_in_window[-1], y_values_in_window[-1]
+
+        self._remove_observation(x_to_remove, y_to_remove)
+        self._add_observation(x_to_add, y_to_add)
+
+        return window_bound_lower, x_values_in_window, y_values_in_window
+
+    def _remove_observation(self, x_to_remove, y_to_remove):
+        self._remove_observation_to_variances(x_to_remove, y_to_remove)
+        self._remove_observation_from_means(x_to_remove, y_to_remove)
+        self.window_size -= 1
+
+    def _add_observation(self, x_to_add, y_to_add):
+        self._add_observation_to_means(x_to_add, y_to_add)
+        self._add_observation_to_variances(x_to_add, y_to_add)
+        self.window_size += 1
 
     def _add_observation_to_means(self, xj, yj):
         """
@@ -232,23 +238,6 @@ class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
         x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
         self._update_mean_in_window(x_values_in_window, y_values_in_window)
         self._update_variance_in_window(x_values_in_window, y_values_in_window)
-        return window_bound_lower, x_values_in_window, y_values_in_window
-
-class BasicFixedSpanSmootherFastMeans(BasicFixedSpanSmoother):
-    """has fast updating on means but no variance"""
-    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
-        window_bound_lower += 1
-
-        x_to_remove, y_to_remove = x_values_in_last_window[0], y_values_in_last_window[0]
-        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
-        x_to_add, y_to_add = x_values_in_window[-1], y_values_in_window[-1]
-
-        self._remove_observation_from_means(x_to_remove, y_to_remove)
-        self.window_size -= 1
-        self._add_observation_to_means(x_to_add, y_to_add)
-        self.window_size += 1
-        self._update_variance_in_window(x_values_in_window, y_values_in_window)
-
         return window_bound_lower, x_values_in_window, y_values_in_window
 
 

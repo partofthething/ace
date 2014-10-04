@@ -103,8 +103,8 @@ class ACESolver(object):
                                if k != xtransform_index]
             updated_x_transform_choppy = numpy.zeros(self._N)
             for i in range(self._N):
-                sum_of_others = sum([x_transform[i] for x_transform in other_transforms])
-                updated_x_transform_choppy[i] = self._y_transform[i] - sum_of_others
+                sum_of_others_at_i = sum([x_transform[i] for x_transform in other_transforms])
+                updated_x_transform_choppy[i] = self._y_transform[i] - sum_of_others_at_i
 
             updated_x_transform_smooth = perform_smooth(self._x[xtransform_index],
                                                         updated_x_transform_choppy,

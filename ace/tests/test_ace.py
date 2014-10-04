@@ -41,13 +41,9 @@ def plot_transforms(ace_model):
 def build_sample_problem(ace_cls=None):
     N = 100
 
-    numpy.random.seed(50)
-    random.seed(50)
-    # x = [numpy.linspace(-1, 1, N)]
     x = [numpy.array([random.random() * 2.0 - 1.0 for i in range(N)])
          for _i in range(0, 5)]
     noise = numpy.random.standard_normal(N)
-    # noise = numpy.array([random.normalvariate(0, 1) for _xi in range(N)])
     y = numpy.log(4.0 + numpy.sin(4 * x[0]) + numpy.abs(x[1]) + x[2] ** 2 +
                  x[3] ** 3 + x[4] + 0.1 * noise)
     if ace_cls is None:
