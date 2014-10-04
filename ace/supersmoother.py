@@ -7,6 +7,7 @@ Based on [1]
         http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3477.pdf
 '''
 import numpy
+from scipy.interpolate import interp1d
 
 from . import smoother
 from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN
@@ -25,7 +26,7 @@ class SuperSmoother(smoother.Smoother):
         self._residual_smooths = []
         self._best_span_at_each_point = []
         self._smoothed_best_spans = []
-        self._bass_enhancement = 2.0  # should be between 0 and 10.
+        self._bass_enhancement = 0.0  # should be between 0 and 10.
 
     def set_bass_enhancement(self, alpha):
         self._bass_enhancement = alpha
@@ -38,6 +39,7 @@ class SuperSmoother(smoother.Smoother):
         self._enhance_bass()
         self._smooth_best_span_estimates()
         self._apply_best_spans_to_primaries()
+        self._build_interpolator(self._x, self.smooth_result)
 
     def _compute_primary_smooths(self):
 

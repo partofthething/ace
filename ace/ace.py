@@ -108,7 +108,7 @@ class ACESolver(object):
 
             updated_x_transform_smooth = perform_smooth(self._x[xtransform_index],
                                                         updated_x_transform_choppy,
-                                                        smoother_class=SuperSmoother)
+                                                        smoother_cls=SuperSmoother)
             # updated_x_transform_smooth.plot()
             self._x_transforms[xtransform_index] = updated_x_transform_smooth.smooth_result
 
@@ -120,7 +120,7 @@ class ACESolver(object):
         """
         sum_of_x_transformations_choppy = sum(self._x_transforms)
         smooth = perform_smooth(self._y, sum_of_x_transformations_choppy,
-                                smoother_class=SuperSmoother)
+                                smoother_cls=SuperSmoother)
         sum_of_x_transformations_smooth = smooth.smooth_result
         self._y_transform = (sum_of_x_transformations_smooth /
                              numpy.linalg.norm(sum_of_x_transformations_smooth))

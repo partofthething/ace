@@ -11,14 +11,12 @@ import unittest
 import numpy
 import pylab
 
-import ace.smoother
-import ace.supersmoother
-
-
+from .. import smoother
+from .. import supersmoother
 
 class TestSmoother(unittest.TestCase):
     def setUp(self):
-        self.smoother = ace.smoother.BasicFixedSpanSmoother()
+        self.smoother = smoother.BasicFixedSpanSmoother()
         self.smoother.specify_data_set(range(5), range(5))
         self.xData = [1.0, 2.0, 3.0]
         self.yData = [4.0, 5.0, 6.0]
@@ -106,7 +104,7 @@ class TestProblemSmoothers(unittest.TestCase):
     def setUp(self):
         self.x, self.y = build_test_problem()
         pylab.figure()
-        pylab.plot(self.x, self.y, '.', label='Data')
+        # pylab.plot(self.x, self.y, '.', label='Data')
 
     @unittest.skip('Plots stuff')
     def test_basic_smoother(self):
@@ -114,23 +112,23 @@ class TestProblemSmoothers(unittest.TestCase):
         Runs Friedman's test from Figure 2b. 
         """
 
-        for span in ace.smoother.DEFAULT_SPANS:
-            smoother = ace.smoother.perform_smooth(self.x, self.y, span)
+        for span in smoother.DEFAULT_SPANS:
+            smoother = smoother.perform_smooth(self.x, self.y, span)
             pylab.plot(self.x, smoother.smooth_result, label='Span = {0}'.format(span))
         finish_plot()
 
-    # @unittest.skip('Plots stuff')
+    @unittest.skip('Plots stuff')
     def test_supersmoother(self):
-        smoother = ace.smoother.perform_smooth(
+        my_smoother = smoother.perform_smooth(
                                  self.x, self.y,
-                                 smoother_class=ace.supersmoother.SuperSmoother)
-        pylab.plot(self.x, smoother.smooth_result, label='Supersmoother')
+                                 smoother_cls=supersmoother.SuperSmoother)
+        pylab.plot(self.x, my_smoother.smooth_result, label='Supersmoother')
         finish_plot()
 
     @unittest.skip('Plots stuff')
     def test_supersmoother_bass(self):
         for bass in range(0, 1, 1):
-            smoother = ace.supersmoother.SuperSmoother()
+            smoother = supersmoother.SuperSmoother()
             smoother._bass_enhancement = bass
             smoother.specify_data_set(self.x, self.y)
             smoother.compute()
@@ -144,21 +142,32 @@ class TestProblemSmoothers(unittest.TestCase):
     @unittest.skip('long running')
     def test_average_best_span(self):
         N = 200
-        num_trials = 1000
+        pylab.figure()
+        num_trials = 400
         avg = numpy.zeros(N)
         for i in range(num_trials):
             x, y = build_test_problem(N)
-            smoother = ace.smoother.perform_smooth(
+            my_smoother = smoother.perform_smooth(
                                  x, y,
-                                 smoother_class=ace.supersmoother.SuperSmoother)
-            avg += smoother._smoothed_best_spans.smooth_result
+                                 smoother_cls=supersmoother.SuperSmoother)
+            avg += my_smoother._smoothed_best_spans.smooth_result
             if not (i + 1) % 20:
                 print i + 1
         avg /= num_trials
         pylab.plot(self.x, avg)
         finish_plot()
 
-
+    def test_known_curve(self):
+        N = 100
+        x = numpy.linspace(-1, 1, N)
+        y = numpy.sin(4 * x)
+        smooth = smoother.perform_smooth(x, y, smoother_cls=supersmoother.SuperSmoother)
+        pylab.plot(x, smooth.smooth_result)
+        smoother.DEFAULT_BASIC_SMOOTHER = smoother.BasicFixedSpanSmoother
+        smooth = smoother.perform_smooth(x, y, smoother_cls=supersmoother.SuperSmoother)
+        pylab.plot(x, smooth.smooth_result)
+        pylab.plot(x, y, '.')
+        pylab.show()
 
 def finish_plot():
     pylab.legend()

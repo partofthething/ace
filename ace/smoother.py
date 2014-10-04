@@ -7,6 +7,7 @@ Python port of J. Friedman's 1984 smoother
 
 import numpy
 import pylab
+from scipy.interpolate import interp1d
 
 TWEETER_SPAN = 0.05
 MID_SPAN = 0.2
@@ -74,6 +75,15 @@ class Smoother(object):
         pylab.plot(self._x, self.smooth_result)
         pylab.show()
 
+    def _build_interpolator(self, x, y):
+        """
+        builds an intepolator from the results of the smooth to provide continuous values
+        """
+        self._interpolator = interp1d(x, y, bounds_error=False, fill_value=0.0)
+
+    def evaluate(self, x):
+        return self._interpolator(x)
+
 class BasicFixedSpanSmoother(Smoother):
     """
     A basic fixed-span smoother
@@ -86,6 +96,23 @@ class BasicFixedSpanSmoother(Smoother):
     performance, if needed. 
     
     """
+
+    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
+        x_to_remove, y_to_remove = x_values_in_last_window[0], y_values_in_last_window[0]
+
+        window_bound_lower += 1
+
+        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
+        x_to_add, y_to_add = x_values_in_window[-1], y_values_in_window[-1]
+
+        self._remove_observation_to_variances(x_to_remove, y_to_remove)
+        self._remove_observation_from_means(x_to_remove, y_to_remove)
+
+        self._add_observation_to_means(x_to_add, y_to_add)
+        self._add_observation_to_variances(x_to_add, y_to_add)
+
+        return window_bound_lower, x_values_in_window, y_values_in_window
+
     def compute(self):
         """
         
@@ -103,29 +130,21 @@ class BasicFixedSpanSmoother(Smoother):
         self._update_mean_in_window(x_values_in_window, y_values_in_window)
         self._update_variance_in_window(x_values_in_window, y_values_in_window)
         for i, (xi, yi) in enumerate(zip(x, y)):
-            smooth_here = self._compute_smooth_here(xi, yi)
+            smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
             smooth.append(smooth_here)
             residual.append(residual_here)
 
             if i - self.window_size / 2.0 > 0.0 and i + self.window_size / 2.0 <= len(x):
-                window_bound_lower += 1
-                (x_values_in_window,
-                 y_values_in_window) = self._get_values_in_window(x, y, window_bound_lower)
+                window_bound_lower, x_values_in_window, y_values_in_window = self._update_window(x, y, window_bound_lower, x_values_in_window, y_values_in_window)
 
-                (x_to_add, y_to_add) = x_values_in_window[-1], y_values_in_window[-1]
-                (x_to_remove, y_to_remove) = x_values_in_window[0], y_values_in_window[0]
-
-                self._remove_observation_to_variances(x_to_remove, y_to_remove)
-                self._remove_observation_from_means(x_to_remove, y_to_remove)
-
-                self._add_observation_to_means(x_to_add, y_to_add)
-                self._add_observation_to_variances(x_to_add, y_to_add)
-
+        self._build_interpolator(x, smooth)
         self.smooth_result = numpy.zeros(len(self._y))
-        for i, smoothVal in enumerate(smooth):
-            self.smooth_result[self._original_index_of_xvalue[i]] = smoothVal
-        self.cross_validated_residual = numpy.array(residual)
+        self.cross_validated_residual = numpy.zeros(len(residual))
+        for i, (smooth_val, residual_val) in enumerate(zip(smooth, residual)):
+            original_index = self._original_index_of_xvalue[i]
+            self.smooth_result[original_index] = smooth_val
+            self.cross_validated_residual[original_index] = residual_val
 
     def _compute_window_size(self):
         self.window_size = int(len(self._x) * self._span)  # number of nearest neighbors
@@ -186,12 +205,11 @@ class BasicFixedSpanSmoother(Smoother):
         self._variance_in_window -= (self.window_size / (self.window_size - 1.0) *
                                        (xj - self._mean_x_in_window) ** 2)
 
-    def _compute_smooth_here(self, xi, yi):
+    def _compute_smooth_during_construction(self, xi):
         if self._variance_in_window:
             m = self._covariance_in_window / self._variance_in_window
             b = self._mean_y_in_window - m * self._mean_x_in_window
             value_of_smooth_here = m * (xi) + b
-
         else:
             value_of_smooth_here = 0.0
 
@@ -206,11 +224,23 @@ class BasicFixedSpanSmoother(Smoother):
                                          self._variance_in_window)
         return residual
 
-def perform_smooth(x_values, y_values, span=0.0, smoother_class=BasicFixedSpanSmoother):
+class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
+    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
+        window_bound_lower += 1
+        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
+        self._update_mean_in_window(x_values_in_window, y_values_in_window)
+        self._update_variance_in_window(x_values_in_window, y_values_in_window)
+        return window_bound_lower, x_values_in_window, y_values_in_window
+
+DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmootherSlowUpdate
+
+def perform_smooth(x_values, y_values, span=0.0, smoother_cls=None):
     """
     Convenience function to run the basic smoother
     """
-    smoother = smoother_class()
+    if smoother_cls is None:
+        smoother_cls = DEFAULT_BASIC_SMOOTHER
+    smoother = smoother_cls()
     smoother.specify_data_set(x_values, y_values)
     smoother.set_span(span)
     smoother.compute()
