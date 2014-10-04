@@ -26,7 +26,7 @@ class SuperSmoother(smoother.Smoother):
         self._residual_smooths = []
         self._best_span_at_each_point = []
         self._smoothed_best_spans = []
-        self._bass_enhancement = 0.0  # should be between 0 and 10.
+        self._bass_enhancement = 3.0  # should be between 0 and 10.
 
     def set_bass_enhancement(self, alpha):
         self._bass_enhancement = alpha
@@ -39,7 +39,7 @@ class SuperSmoother(smoother.Smoother):
         self._enhance_bass()
         self._smooth_best_span_estimates()
         self._apply_best_spans_to_primaries()
-        self._build_interpolator(self._x, self.smooth_result)
+        # self._build_interpolator(self._x, self.smooth_result)
 
     def _compute_primary_smooths(self):
 
@@ -75,6 +75,8 @@ class SuperSmoother(smoother.Smoother):
         Update best span choices with bass enhancement as requested by user
         (Eq. 11)
         """
+        if not self._bass_enhancement:
+            return
         bass_span = DEFAULT_SPANS[BASS_INDEX]
         enhanced_spans = []
         for xi, best_span_here in enumerate(self._best_span_at_each_point):
@@ -82,10 +84,9 @@ class SuperSmoother(smoother.Smoother):
             ri = ((self._residual_smooths[best_smooth_index][xi]) /
                   (self._residual_smooths[BASS_INDEX][xi]))
             best_span = DEFAULT_SPANS[best_smooth_index]
-
             enhanced_spans.append(best_span +
                                         (bass_span -
-                                         best_span) * ri ** (10.0 - self._bass_enhancement))
+                                         best_span) * abs(ri) ** (10.0 - self._bass_enhancement))
         self._best_span_at_each_point = enhanced_spans
 
     def _smooth_best_span_estimates(self):

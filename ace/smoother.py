@@ -65,6 +65,8 @@ class Smoother(object):
         x, y = zip(*xy)  # pylint: disable=star-args
         x_list = list(self._x)
         self._original_index_of_xvalue = [x_list.index(xi) for xi in x]
+        if len(set(self._original_index_of_xvalue)) != len(x):
+            raise RuntimeError('There are some non-unique original indices')
         return numpy.array(x), numpy.array(y)
 
     def compute(self):
@@ -90,11 +92,7 @@ class BasicFixedSpanSmoother(Smoother):
 
     Simple least-squares linear local smoother. 
     
-    Notes
-    -----
-    Can be easily upgraded so that means can be updated rather than recalculated, improving
-    performance, if needed. 
-    
+    Uses fast updates of means, variances. 
     """
 
     def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
@@ -107,10 +105,10 @@ class BasicFixedSpanSmoother(Smoother):
 
         self._remove_observation_to_variances(x_to_remove, y_to_remove)
         self._remove_observation_from_means(x_to_remove, y_to_remove)
-
+        self.window_size -= 1
         self._add_observation_to_means(x_to_add, y_to_add)
         self._add_observation_to_variances(x_to_add, y_to_add)
-
+        self.window_size += 1
         return window_bound_lower, x_values_in_window, y_values_in_window
 
     def compute(self):
@@ -130,6 +128,7 @@ class BasicFixedSpanSmoother(Smoother):
         self._update_mean_in_window(x_values_in_window, y_values_in_window)
         self._update_variance_in_window(x_values_in_window, y_values_in_window)
         for i, (xi, yi) in enumerate(zip(x, y)):
+
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
             smooth.append(smooth_here)
@@ -138,7 +137,6 @@ class BasicFixedSpanSmoother(Smoother):
             if i - self.window_size / 2.0 > 0.0 and i + self.window_size / 2.0 <= len(x):
                 window_bound_lower, x_values_in_window, y_values_in_window = self._update_window(x, y, window_bound_lower, x_values_in_window, y_values_in_window)
 
-        self._build_interpolator(x, smooth)
         self.smooth_result = numpy.zeros(len(self._y))
         self.cross_validated_residual = numpy.zeros(len(residual))
         for i, (smooth_val, residual_val) in enumerate(zip(smooth, residual)):
@@ -225,6 +223,10 @@ class BasicFixedSpanSmoother(Smoother):
         return residual
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
+    """
+    Uses slow means and variances at each step. Used to validate fast updates
+    """
+
     def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
         window_bound_lower += 1
         x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
@@ -232,7 +234,25 @@ class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
         self._update_variance_in_window(x_values_in_window, y_values_in_window)
         return window_bound_lower, x_values_in_window, y_values_in_window
 
-DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmootherSlowUpdate
+class BasicFixedSpanSmootherFastMeans(BasicFixedSpanSmoother):
+    """has fast updating on means but no variance"""
+    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
+        window_bound_lower += 1
+
+        x_to_remove, y_to_remove = x_values_in_last_window[0], y_values_in_last_window[0]
+        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
+        x_to_add, y_to_add = x_values_in_window[-1], y_values_in_window[-1]
+
+        self._remove_observation_from_means(x_to_remove, y_to_remove)
+        self.window_size -= 1
+        self._add_observation_to_means(x_to_add, y_to_add)
+        self.window_size += 1
+        self._update_variance_in_window(x_values_in_window, y_values_in_window)
+
+        return window_bound_lower, x_values_in_window, y_values_in_window
+
+
+DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother
 
 def perform_smooth(x_values, y_values, span=0.0, smoother_cls=None):
     """
