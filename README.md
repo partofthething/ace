@@ -12,7 +12,7 @@ ace also contains a pure-Python implementation of Friedman's SuperSmoother [2], 
 
 Usage
 =====
-To use ace, you can follow this example problem
+To use ace, you can follow this example problem (from [3]):
 
 ```python
 from ace import ace
@@ -44,5 +44,7 @@ References
 1. L. BREIMAN and J. H. FRIEDMAN, "Estimating optimal transformations for multiple regression and correlation," Journal of the American Statistical Association, 80, 580 (1985).
 
 2. J. H. FRIEDMAN and W. STUETZLE, "Smoothing of scatterplots," ORION-003, Standfort University (1982).
+
+3. D. WANG and M. MURPHY, "Estimating optimal transformations for multiple regression using the ACE algorithm," Journal of Data Science, 2, 329 (2004).
 
 
