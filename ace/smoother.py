@@ -7,7 +7,6 @@ Python port of J. Friedman's 1984 smoother
 
 import numpy
 import pylab
-from scipy.interpolate import interp1d
 
 TWEETER_SPAN = 0.05
 MID_SPAN = 0.2
@@ -34,6 +33,9 @@ class Smoother(object):
         self.cross_validated_residual = None
         self.window_size = None
         self._original_index_of_xvalue = []  # for dealing w/ unsorted data
+        self._window_bound_lower = 0
+        self._x_in_window = []
+        self._y_in_window = []
 
     def add_data_point_xy(self, x, y):
         """
@@ -72,10 +74,18 @@ class Smoother(object):
     def compute(self):
         raise NotImplementedError
 
-    def plot(self):
+    def plot(self, fName=None):
         pylab.figure()
-        pylab.plot(self._x, self.smooth_result)
-        pylab.show()
+        xy = zip(self._x, self.smooth_result)
+        xy.sort()
+        x, y = zip(*xy)
+        pylab.plot(x, y, '-')
+        # pylab.plot(self._x, self._y, '.')
+        if fName:
+            pylab.savefig(fName)
+        else:
+            pylab.show()
+        pylab.close()
 
     def _store_unsorted_results(self, smooth, residual):
         """
@@ -83,11 +93,13 @@ class Smoother(object):
         """
         self.smooth_result = numpy.zeros(len(self._y))
         self.cross_validated_residual = numpy.zeros(len(residual))
-        for i, (smooth_val, residual_val) in enumerate(zip(smooth, residual)):
+        original_x = numpy.zeros(len(self._y))
+        for i, (xval, smooth_val, residual_val) in enumerate(zip(self._x, smooth, residual)):
             original_index = self._original_index_of_xvalue[i]
+            original_x[original_index] = xval
             self.smooth_result[original_index] = smooth_val
             self.cross_validated_residual[original_index] = residual_val
-
+        self._x = original_x
 
 
 class BasicFixedSpanSmoother(Smoother):
@@ -110,56 +122,55 @@ class BasicFixedSpanSmoother(Smoother):
         x, y = self._x, self._y
 
         # step through x and y data with a window window_size wide.
-        window_bound_lower = 0
-        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y,
-                                                                            window_bound_lower)
-        self._update_mean_in_window(x_values_in_window, y_values_in_window)
-        self._update_variance_in_window(x_values_in_window, y_values_in_window)
+        self._update_values_in_window()
+        self._update_mean_in_window()
+        self._update_variance_in_window()
         for i, (xi, yi) in enumerate(zip(x, y)):
+            if (i - self._neighbors_on_each_side) > 0.0 and (i + self._neighbors_on_each_side) < len(x):
+                self._advance_window()
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
             smooth.append(smooth_here)
             residual.append(residual_here)
-            if i - self.window_size / 2.0 > 0.0 and i + self.window_size / 2.0 <= len(x):
-                window_bound_lower, x_values_in_window, y_values_in_window = self._update_window(x, y, window_bound_lower, x_values_in_window, y_values_in_window)
+
         self._store_unsorted_results(smooth, residual)
 
     def _compute_window_size(self):
-        self.window_size = int(len(self._x) * self._span)  # number of nearest neighbors
+        """
+        Make a symmetric neighborhood with J/2 values on each side of current position j
+        """
+        self._neighbors_on_each_side = int(len(self._x) * self._span) / 2
+        self.window_size = self._neighbors_on_each_side * 2 + 1
 
-    def _get_values_in_window(self, x, y, window_bound_lower):
-        window_bound_upper = window_bound_lower + self.window_size
-        x_values_in_window = x[window_bound_lower:window_bound_upper]
-        y_values_in_window = y[window_bound_lower:window_bound_upper]
-        return x_values_in_window, y_values_in_window
+    def _update_values_in_window(self):
+        window_bound_upper = self._window_bound_lower + self.window_size
+        self._x_in_window = self._x[self._window_bound_lower:window_bound_upper]
+        self._y_in_window = self._y[self._window_bound_lower:window_bound_upper]
 
-    def _update_mean_in_window(self, x_values_in_window, y_values_in_window):
-        self._mean_x_in_window = numpy.mean(x_values_in_window)
-        self._mean_y_in_window = numpy.mean(y_values_in_window)
+    def _update_mean_in_window(self):
+        self._mean_x_in_window = numpy.mean(self._x_in_window)
+        self._mean_y_in_window = numpy.mean(self._y_in_window)
 
-    def _update_variance_in_window(self, x_values_in_window, y_values_in_window):
+    def _update_variance_in_window(self):
         self._covariance_in_window = sum([(xj - self._mean_x_in_window) *
                                           (yj - self._mean_y_in_window)
-                      for xj, yj in zip(x_values_in_window, y_values_in_window)])
+                      for xj, yj in zip(self._x_in_window, self._y_in_window)])
 
         self._variance_in_window = sum([(xj - self._mean_x_in_window) ** 2 for xj
-                                        in x_values_in_window])
+                                        in self._x_in_window])
 
-    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
+    def _advance_window(self):
         """
         Update values in current window and the current window means and variances. 
         """
-        x_to_remove, y_to_remove = x_values_in_last_window[0], y_values_in_last_window[0]
+        x_to_remove, y_to_remove = self._x_in_window[0], self._y_in_window[0]
 
-        window_bound_lower += 1
-
-        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
-        x_to_add, y_to_add = x_values_in_window[-1], y_values_in_window[-1]
+        self._window_bound_lower += 1
+        self._update_values_in_window()
+        x_to_add, y_to_add = self._x_in_window [-1], self._y_in_window[-1]
 
         self._remove_observation(x_to_remove, y_to_remove)
         self._add_observation(x_to_add, y_to_add)
-
-        return window_bound_lower, x_values_in_window, y_values_in_window
 
     def _remove_observation(self, x_to_remove, y_to_remove):
         self._remove_observation_to_variances(x_to_remove, y_to_remove)
@@ -211,21 +222,20 @@ class BasicFixedSpanSmoother(Smoother):
 
     def _compute_smooth_during_construction(self, xi):
         if self._variance_in_window:
-            m = self._covariance_in_window / self._variance_in_window
-            b = self._mean_y_in_window - m * self._mean_x_in_window
-            value_of_smooth_here = m * (xi) + b
+            beta = self._covariance_in_window / self._variance_in_window
+            alpha = self._mean_y_in_window - beta * self._mean_x_in_window
+            value_of_smooth_here = beta * (xi) + alpha
         else:
             value_of_smooth_here = 0.0
-
         return value_of_smooth_here
 
     def _compute_cross_validated_residual_here(self, xi, yi, smooth_here):
         """
         Eq. (9)
         """
-        residual = (yi - smooth_here) / (1.0 - 1.0 / self.window_size -
+        residual = ((yi - smooth_here) / (1.0 - 1.0 / self.window_size -
                                          (xi - self._mean_x_in_window) ** 2 /
-                                         self._variance_in_window)
+                                         self._variance_in_window)) ** 2
         return residual
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
@@ -233,17 +243,15 @@ class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
     Uses slow means and variances at each step. Used to validate fast updates
     """
 
-    def _update_window(self, x, y, window_bound_lower, x_values_in_last_window, y_values_in_last_window):
-        window_bound_lower += 1
-        x_values_in_window, y_values_in_window = self._get_values_in_window(x, y, window_bound_lower)
-        self._update_mean_in_window(x_values_in_window, y_values_in_window)
-        self._update_variance_in_window(x_values_in_window, y_values_in_window)
-        return window_bound_lower, x_values_in_window, y_values_in_window
-
+    def _advance_window(self):
+        self._window_bound_lower += 1
+        self._update_values_in_window()
+        self._update_mean_in_window()
+        self._update_variance_in_window()
 
 DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother
 
-def perform_smooth(x_values, y_values, span=0.0, smoother_cls=None):
+def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     """
     Convenience function to run the basic smoother
     """
