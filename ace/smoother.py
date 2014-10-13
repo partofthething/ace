@@ -4,6 +4,7 @@ Python port of J. Friedman's 1984 smoother
 [1] J. Friedman, "A Variable Span Smoother", 1984 
         http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3477.pdf
 '''
+import math
 
 import numpy
 import pylab
@@ -231,11 +232,13 @@ class BasicFixedSpanSmoother(Smoother):
 
     def _compute_cross_validated_residual_here(self, xi, yi, smooth_here):
         """
-        Eq. (9)
+        Compute CV residual. 
+        
+        This is the absolute residual from Eq. 9. 
         """
-        residual = ((yi - smooth_here) / (1.0 - 1.0 / self.window_size -
+        residual = abs((yi - smooth_here) / (1.0 - 1.0 / self.window_size -
                                          (xi - self._mean_x_in_window) ** 2 /
-                                         self._variance_in_window)) ** 2
+                                         self._variance_in_window))
         return residual
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
@@ -248,6 +251,7 @@ class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
         self._update_values_in_window()
         self._update_mean_in_window()
         self._update_variance_in_window()
+
 
 DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother
 

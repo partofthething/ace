@@ -7,9 +7,10 @@ Based on [1]
         http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3477.pdf
 '''
 import numpy
+from matplotlib import pyplot as plt
 
 from . import smoother
-from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN
+from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN, TWEETER_SPAN
 
 BASS_INDEX = DEFAULT_SPANS.index(BASS_SPAN)
 
@@ -25,7 +26,7 @@ class SuperSmoother(smoother.Smoother):
         self._residual_smooths = []
         self._best_span_at_each_point = []
         self._smoothed_best_spans = []
-        self._bass_enhancement = 4.0  # should be between 0 and 10.
+        self._bass_enhancement = 0.0  # should be between 0 and 10.
 
     def set_bass_enhancement(self, alpha):
         self._bass_enhancement = alpha
@@ -38,6 +39,7 @@ class SuperSmoother(smoother.Smoother):
         self._enhance_bass()
         self._smooth_best_span_estimates()
         self._apply_best_spans_to_primaries()
+        self._smooth_interpolated_smooth()
         self._store_unsorted_results(self.smooth_result, numpy.zeros(len(self.smooth_result)))
 
     def _compute_primary_smooths(self):
@@ -54,9 +56,9 @@ class SuperSmoother(smoother.Smoother):
         """
         for primary_smooth in self._primary_smooths:
             smooth = smoother.perform_smooth(
-                               self._x,
-                               numpy.abs(primary_smooth.cross_validated_residual),
-                               MID_SPAN)
+                                             self._x,
+                                             primary_smooth.cross_validated_residual,
+                                             MID_SPAN)
             self._residual_smooths.append(smooth.smooth_result)
 
     def _select_best_smooth_at_each_point(self):
@@ -75,17 +77,21 @@ class SuperSmoother(smoother.Smoother):
         (Eq. 11)
         """
         if not self._bass_enhancement:
+            # like in supsmu, skip if alpha=0
             return
         bass_span = DEFAULT_SPANS[BASS_INDEX]
         enhanced_spans = []
         for i, best_span_here in enumerate(self._best_span_at_each_point):
             best_smooth_index = DEFAULT_SPANS.index(best_span_here)
-            ri = ((self._residual_smooths[best_smooth_index][i]) /
-                  (self._residual_smooths[BASS_INDEX][i]))
             best_span = DEFAULT_SPANS[best_smooth_index]
-            enhanced_spans.append(best_span +
-                                        (bass_span -
-                                         best_span) * ri ** (10.0 - self._bass_enhancement))
+            best_span_residual = self._residual_smooths[best_smooth_index][i]
+            bass_span_residual = self._residual_smooths[BASS_INDEX][i]
+            if best_span_residual < bass_span_residual and best_span_residual > 0:
+                ri = best_span_residual / bass_span_residual
+                bass_factor = ri ** (10.0 - self._bass_enhancement)
+                enhanced_spans.append(best_span + (bass_span - best_span) * bass_factor)
+            else:
+                enhanced_spans.append(best_span)
         self._best_span_at_each_point = enhanced_spans
 
     def _smooth_best_span_estimates(self):
@@ -93,10 +99,57 @@ class SuperSmoother(smoother.Smoother):
                                self._x, self._best_span_at_each_point, MID_SPAN)
 
     def _apply_best_spans_to_primaries(self):
+        self.smooth_result = []
         for xi, best_span in enumerate(self._smoothed_best_spans.smooth_result):
             primary_values = [s.smooth_result[xi] for s in self._primary_smooths]
             best_value = numpy.interp(best_span, DEFAULT_SPANS, primary_values)
             self.smooth_result.append(best_value)
 
-        self.smooth_result = numpy.array(self.smooth_result)
+    def _smooth_interpolated_smooth(self):
+        """
+        Smooth interpolated results with tweeter span
+        
+        A final step of the supersmoother is to smooth the interpolated values with
+        the tweeter span. This is done in Breiman's supsmu.f but is not explicitly
+        discussed in the publication. This step is necessary to match
+        the FORTRAN version perfectly. 
+        """
+        smoothed_results = smoother.perform_smooth(self._x,
+                                                   self.smooth_result,
+                                                   TWEETER_SPAN)
+        self.smooth_result = smoothed_results.smooth_result
 
+class SuperSmootherWithPlots(SuperSmoother):
+    def _compute_primary_smooths(self):
+        super(SuperSmootherWithPlots, self)._compute_primary_smooths()
+        plt.figure()
+        for smooth in self._primary_smooths:
+            plt.plot(self._x, smooth.smooth_result)
+        plt.plot(self._x, self._y, '.')
+        plt.savefig('primary_smooths.png')
+        plt.close()
+
+    def _smooth_the_residuals(self):
+        super(SuperSmootherWithPlots, self)._smooth_the_residuals()
+        plt.figure()
+        for residual, span in zip(self._residual_smooths, smoother.DEFAULT_SPANS):
+            plt.plot(self._x, residual, label='{0}'.format(span))
+        plt.legend(loc='upper left')
+        plt.savefig('residual_smooths.png')
+        plt.close()
+
+    def _select_best_smooth_at_each_point(self):
+        super(SuperSmootherWithPlots, self)._select_best_smooth_at_each_point()
+        plt.figure()
+        plt.plot(self._x, self._best_span_at_each_point, label='Fresh')
+
+    def _enhance_bass(self):
+        super(SuperSmootherWithPlots, self)._enhance_bass()
+        plt.plot(self._x, self._best_span_at_each_point, label='Enhanced bass')
+
+    def _smooth_best_span_estimates(self):
+        super(SuperSmootherWithPlots, self)._smooth_best_span_estimates()
+        plt.plot(self._x, self._smoothed_best_spans.smooth_result, label='Smoothed')
+        plt.legend(loc='upper left')
+        plt.savefig('best_spans.png')
+        plt.close()
