@@ -66,8 +66,8 @@ class Smoother(object):
         if len(set(self._original_index_of_xvalue)) != len(x):
             raise RuntimeError('There are some non-unique original indices')
 
-        self._x = x
-        self._y = y
+        self._x = x[:]
+        self._y = y[:]
 
     def set_span(self, span):
         self._span = span
@@ -81,7 +81,7 @@ class Smoother(object):
         xy.sort()
         x, y = zip(*xy)
         pylab.plot(x, y, '-')
-        # pylab.plot(self._x, self._y, '.')
+        pylab.plot(self._x, self._y, '.')
         if fName:
             pylab.savefig(fName)
         else:

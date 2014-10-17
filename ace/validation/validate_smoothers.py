@@ -10,7 +10,7 @@ import numpy
 import sample_problems
 import ace.smoother as smoother
 import ace.supersmoother as supersmoother
-import supsmu
+import mace
 
 def validate_basic_smoother():
     """
@@ -45,12 +45,14 @@ def validate_supersmoother():
     x, y = sort_data(x, y)
     my_smoother = smoother.perform_smooth(x, y, smoother_cls=supersmoother.SuperSmootherWithPlots)
     # smoother.DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmootherBreiman
-    supsmu_result = run_freidman_supsmu(x, y)
+    supsmu_result = run_freidman_supsmu(x, y, bass_enhancement=0.0)
+    mace_result = run_mace_smothr(x, y, bass_enhancement=0.0)
     plt.plot(x, y, '.', label='Data')
     plt.plot(x, my_smoother.smooth_result, '-', label='pyace')
     plt.plot(x, supsmu_result, '-', label='SUPSMU')
+    plt.plot(x, mace_result, '-', label='SMOOTH')
     plt.legend()
-    plt.show()
+    plt.savefig('supersmoother_validation.png')
 
 def validate_supersmoother_bass():
     x, y = sample_problems.sample_smoother_problem_brieman82()
@@ -111,13 +113,12 @@ def finish_plot():
     plt.ylabel('y')
     plt.show()
 
-def run_freidman_supsmu(x, y):
+def run_freidman_supsmu(x, y, bass_enhancement=0.0):
     N = len(x)
     weight = numpy.ones(N)
     results = numpy.zeros(N)
     sc = numpy.zeros((N, 7))
-    bass_enhancement = 0.0
-    supsmu.supsmu(x, y, weight, 1, 0.0, bass_enhancement, results, sc)
+    mace.supsmu(x, y, weight, 1, 0.0, bass_enhancement, results, sc)
     return results
 
 def run_friedman_smooth(x, y, span):
@@ -125,9 +126,16 @@ def run_friedman_smooth(x, y, span):
     weight = numpy.ones(N)
     results = numpy.zeros(N)
     residuals = numpy.zeros(N)
-    supsmu.smooth(x, y, weight, span, 1, 1e-7, results, residuals)
+    mace.smooth(x, y, weight, span, 1, 1e-7, results, residuals)
     return results, residuals
 
+def run_mace_smothr(x, y, bass_enhancement=0.0):
+    N = len(x)
+    weight = numpy.ones(N)
+    results = numpy.zeros(N)
+    sc = numpy.zeros((N, 7))
+    mace.smothr(1, x, y, weight, results, sc)
+    return results
 
 class BasicFixedSpanSmootherBreiman(smoother.Smoother):
     """

@@ -7,6 +7,8 @@ import numpy
 import numpy.random
 import scipy.special
 
+from ace.validation.validate_smoothers import sort_data
+
 def sample_ace_problem_wang04(N=100):
     """
     Sample problem from Wang 2004
@@ -25,10 +27,11 @@ def sample_ace_problem_breiman85(N=200):
     """
 
     x3 = numpy.random.standard_normal(N)
-    x = [scipy.special.cbrt(x3)]
+    x = scipy.special.cbrt(x3)
     noise = numpy.random.standard_normal(N)
-    y = numpy.exp(x[0] ** 3.0 + noise)
-    return x, y
+    y = numpy.exp(x ** 3.0 + noise)
+    x, y = sort_data(x, y)
+    return [x], y
 
 def sample_smoother_problem_brieman82(N=200):
     """

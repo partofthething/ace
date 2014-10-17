@@ -25,11 +25,12 @@ easier to use ACE from other Python programs.
     for Multiple Regression and Correlation," Journal of the American Statistical 
     Association, Vol. 80, No. 391 (1985).
 '''
+import math
 
 import numpy
-import numpy.linalg
+import matplotlib.pyplot as plt
 
-from .supersmoother import SuperSmoother
+from .supersmoother import SuperSmoother, SuperSmootherWithPlots
 from .smoother import perform_smooth
 
 class ACESolver(object):
@@ -45,21 +46,28 @@ class ACESolver(object):
         self._y = None
         self._x_transforms = None
         self._y_transform = None
+        self._smoother_cls = SuperSmoother
 
     def solve(self):
         self._initialize()
-        iters = 1
-        while self._outer_error_is_decreasing() and iters < 100:
+        self._outer_iters = 0
+        while (self._outer_error_is_decreasing() or self._outer_iters < 10) and self._outer_iters < 25:
             print('* Starting outer iteration {0:03d}. Current err = {1:12.5E}'
-                  ''.format(iters, self._last_outer_error))
+                  ''.format(self._outer_iters, self._last_outer_error))
             self._iterate_to_update_x_transforms()
             self._update_y_transform()
-            iters += 1
+            self._outer_iters += 1
 
     def _initialize(self):
         self._N = len(self._y)
-        self._y_transform = self._y / numpy.linalg.norm(self._y)
+        self._y_transform = self._y / self._norm(self._y)
         self._x_transforms = [numpy.zeros(self._N) for xi in self._x]
+
+    def _norm(self, values):
+        return numpy.linalg.norm(values)
+        avg = sum(values) / float(len(values))
+        var = (values - avg) ** 2
+        return math.sqrt(sum(var))
 
     def _outer_error_is_decreasing(self):
         is_decreasing, self._last_outer_error = self._error_is_decreasing(self._last_outer_error)
@@ -71,7 +79,7 @@ class ACESolver(object):
 
     def _error_is_decreasing(self, last_error):
         current_error = self._compute_error()
-        if current_error <= last_error:
+        if current_error < last_error:
             is_decreasing = True
         else:
             is_decreasing = False
@@ -83,13 +91,13 @@ class ACESolver(object):
         return err
 
     def _iterate_to_update_x_transforms(self):
-        iters = 1
+        self._inner_iters = 0
         self._last_inner_error = float('inf')
         while self._inner_error_is_decreasing():
             print('  Starting inner iteration {0:03d}. Current err = {1:12.5E}'
-                  ''.format(iters, self._last_inner_error))
+                  ''.format(self._inner_iters, self._last_inner_error))
             self._update_x_transforms()
-            iters += 1
+            self._inner_iters += 1
 
     def _update_x_transforms(self):
         """
@@ -99,18 +107,30 @@ class ACESolver(object):
         expectations are computed using the SuperSmoother.  
         """
         for xtransform_index in range(len(self._x_transforms)):
-            other_transforms = [transform for (k, transform) in enumerate(self._x_transforms)
-                               if k != xtransform_index]
-            updated_x_transform_choppy = numpy.zeros(self._N)
-            for i in range(self._N):
-                sum_of_others_at_i = sum([x_transform[i] for x_transform in other_transforms])
-                updated_x_transform_choppy[i] = self._y_transform[i] - sum_of_others_at_i
+            xk = self._x[xtransform_index]
 
-            updated_x_transform_smooth = perform_smooth(self._x[xtransform_index],
-                                                        updated_x_transform_choppy,
-                                                        smoother_cls=SuperSmoother)
-            # updated_x_transform_smooth.plot()
-            self._x_transforms[xtransform_index] = updated_x_transform_smooth.smooth_result
+            other_transforms = [transform
+                                for (k, transform) in enumerate(self._x_transforms)
+                                if k != xtransform_index]
+            if other_transforms:
+                sum_of_others = numpy.sum(other_transforms, axis=0)
+            else:
+                sum_of_others = numpy.zeros(len(self._y))
+
+            updated_x_transform = self._y_transform - sum_of_others
+            updated_x_transform_smooth = perform_smooth(xk, updated_x_transform,
+                                                        smoother_cls=self._smoother_cls).smooth_result
+            plt.figure()
+            plt.plot(xk, self._y_transform, '.', label='theta')
+            # plt.plot(self._x[xtransform_index], sum_of_others, '.', label='others')
+            plt.plot(xk, updated_x_transform_smooth, '.', label='newPhi')
+            plt.legend()
+            plt.xlabel('x_{0}'.format(xtransform_index))
+            plt.ylabel('phi_{0}'.format(xtransform_index))
+            plt.savefig('updated_x_transform{0:03d}_{1:03d}.png'.format(self._outer_iters, self._inner_iters))
+            plt.close()
+            self._x_transforms[xtransform_index] = updated_x_transform_smooth
+
 
     def _update_y_transform(self):
         """
@@ -118,10 +138,11 @@ class ACESolver(object):
         
         This uses the second conditional expectation
         """
-        sum_of_x_transformations_choppy = sum(self._x_transforms)
+        sum_of_x_transformations_choppy = numpy.sum(self._x_transforms, axis=0)
         smooth = perform_smooth(self._y, sum_of_x_transformations_choppy,
-                                smoother_cls=SuperSmoother)
+                                smoother_cls=self._smoother_cls)
         sum_of_x_transformations_smooth = smooth.smooth_result
+        smooth.plot('theta-smooth.png')
         self._y_transform = (sum_of_x_transformations_smooth /
-                             numpy.linalg.norm(sum_of_x_transformations_smooth))
+                             self._norm(sum_of_x_transformations_smooth))
 
