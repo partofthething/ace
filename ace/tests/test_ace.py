@@ -57,16 +57,16 @@ class TestAce(unittest.TestCase):
         # plt.show()
         # plt.close()
 
-    # @unittest.skip('skip')
+    #@unittest.skip('skip')
     def test_sample_problem2(self):
-        x, y = ace.validation.sample_problems.sample_ace_problem_breiman85()
+        x, y = ace.validation.sample_problems.sample_ace_problem_breiman85(400)
         plt.figure()
         plt.plot(x[0], y, '.')
         plt.savefig('sample_problem_data.png')
-        ace_solver = ace.smoother_diagnostics.ACESolver()
+        ace_solver = ace.ace.ACESolver()
         # ace_solver = ace.smoother_diagnostics.ACESolverWithPlots()
-        # ace_solver._smoother_cls = ace.supersmoother.SuperSmoother
-        ace_solver._smoother_cls = ace.supersmoother.SuperSmootherWithPlots
+        ace_solver._smoother_cls = ace.supersmoother.SuperSmoother
+        #ace_solver._smoother_cls = ace.supersmoother.SuperSmootherWithPlots
         ace_solver._x = x
         ace_solver._y = y
         ace_solver.solve()

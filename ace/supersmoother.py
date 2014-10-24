@@ -26,7 +26,7 @@ class SuperSmoother(smoother.Smoother):
         self._residual_smooths = []
         self._best_span_at_each_point = []
         self._smoothed_best_spans = []
-        self._bass_enhancement = 0.0  # should be between 0 and 10.
+        self._bass_enhancement = 1.0  # should be between 0 and 10.
 
     def set_bass_enhancement(self, alpha):
         self._bass_enhancement = alpha

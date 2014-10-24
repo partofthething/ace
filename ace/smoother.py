@@ -59,15 +59,15 @@ class Smoother(object):
             list of floats that represent y(x) for each x
         """
 
-        xy = sorted(zip(x_input, y_input))
-        x, y = zip(*xy)  # pylint: disable=star-args
-        x_input_list = list(x_input)
-        self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
-        if len(set(self._original_index_of_xvalue)) != len(x):
-            raise RuntimeError('There are some non-unique original indices')
+        #xy = sorted(zip(x_input, y_input))
+        #x, y = zip(*xy)  # pylint: disable=star-args
+        #x_input_list = list(x_input)
+        #self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
+        #if len(set(self._original_index_of_xvalue)) != len(x):
+        #    raise RuntimeError('There are some non-unique original indices')
 
-        self._x = x[:]
-        self._y = y[:]
+        self._x = x_input
+        self._y = y_input
 
     def set_span(self, span):
         self._span = span
@@ -92,8 +92,9 @@ class Smoother(object):
         """
         Convert sorted smooth/residual back to as-input order
         """
-        self.smooth_result = numpy.zeros(len(self._y))
-        self.cross_validated_residual = numpy.zeros(len(residual))
+        self.smooth_result = smooth #numpy.zeros(len(self._y))
+        self.cross_validated_residual = residual#numpy.zeros(len(residual))
+        return        
         original_x = numpy.zeros(len(self._y))
         for i, (xval, smooth_val, residual_val) in enumerate(zip(self._x, smooth, residual)):
             original_index = self._original_index_of_xvalue[i]

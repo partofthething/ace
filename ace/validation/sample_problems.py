@@ -25,12 +25,11 @@ def sample_ace_problem_breiman85(N=200):
     """
     Sample problem 1 from Breiman 1985
     """
-
     x3 = numpy.random.standard_normal(N)
     x = scipy.special.cbrt(x3)
     noise = numpy.random.standard_normal(N)
-    y = numpy.exp(x ** 3.0 + noise)
-    x, y = sort_data(x, y)
+    y = numpy.exp((x**3.0) + noise)
+    #x, y = sort_data(x, y)
     return [x], y
 
 def sample_smoother_problem_brieman82(N=200):
