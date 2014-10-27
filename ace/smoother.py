@@ -237,7 +237,7 @@ class BasicFixedSpanSmoother(Smoother):
 
         self._window_bound_lower += 1
         self._update_values_in_window()
-        x_to_add, y_to_add = self._x_in_window [-1], self._y_in_window[-1]
+        x_to_add, y_to_add = self._x_in_window[-1], self._y_in_window[-1]
 
         self._remove_observation(x_to_remove, y_to_remove)
         self._add_observation(x_to_add, y_to_add)
@@ -278,21 +278,17 @@ class BasicFixedSpanSmoother(Smoother):
         --------
         _update_variance_in_window : compute variance considering full window
         """
-        self._covariance_in_window += ((self.window_size + 1.0) / self.window_size *
-                                       (xj - self._mean_x_in_window) *
-                                       (yj - self._mean_y_in_window))
-        self._variance_in_window += ((self.window_size + 1.0) / self.window_size *
-                                       (xj - self._mean_x_in_window) ** 2)
+        term1 = (self.window_size + 1.0) / self.window_size * (xj - self._mean_x_in_window)
+        self._covariance_in_window += term1 * (yj - self._mean_y_in_window)
+        self._variance_in_window += term1 * (xj - self._mean_x_in_window)
 
     def _remove_observation_to_variances(self, xj, yj):
         """
         Quickly update the variance and co-variance for the deletion of one observation
         """
-        self._covariance_in_window -= (self.window_size / (self.window_size - 1.0) *
-                                       (xj - self._mean_x_in_window) *
-                                       (yj - self._mean_y_in_window))
-        self._variance_in_window -= (self.window_size / (self.window_size - 1.0) *
-                                       (xj - self._mean_x_in_window) ** 2)
+        term1 = self.window_size / (self.window_size - 1.0) * (xj - self._mean_x_in_window)
+        self._covariance_in_window -= term1 * (yj - self._mean_y_in_window)
+        self._variance_in_window -= term1 * (xj - self._mean_x_in_window)
 
     def _compute_smooth_during_construction(self, xi):
         """
