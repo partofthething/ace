@@ -1,10 +1,25 @@
 '''
-Python port of J. Friedman's 1984 smoother
+Scatterplot smoother with a fixed span. Takes x,y scattered data and returns a set of
+(x,s) points that form a smoother curve fiting the data with moving least squares estimates. 
+Similar to a moving average, but with better characteristics. The fundamental issue
+with this smoother is that the choice of span (window size) is not known in advance. 
+The SuperSmoother uses these smoothers to figure out which span is optimal. 
+
+This is a Python port of J. Friedman's 1984 fixed-span Smoother
 
 [1] J. Friedman, "A Variable Span Smoother", 1984 
         http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3477.pdf
+
+Example of use::
+
+    s = Smoother()
+    s.specify_data_set(x, y) 
+    s.set_span(0.05)
+    s.compute()
+    smoothed_y = s.smooth_result
+
+
 '''
-import math
 
 import numpy
 import pylab
@@ -45,7 +60,7 @@ class Smoother(object):
         self._x.append(x)
         self._y.append(y)
 
-    def specify_data_set(self, x_input, y_input):
+    def specify_data_set(self, x_input, y_input, sort_data=False):
         """
         Fully define data by lists of x values and y values. 
         
@@ -57,33 +72,56 @@ class Smoother(object):
             list of floats that represent x
         yValues : iterable
             list of floats that represent y(x) for each x
+        sort_data : bool, optional
+            If true, the data will be sorted by increasing x values. 
         """
+        if sort_data:
+            xy = sorted(zip(x_input, y_input))
+            x, y = zip(*xy)  # pylint: disable=star-args
+            x_input_list = list(x_input)
+            self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
+            if len(set(self._original_index_of_xvalue)) != len(x):
+                raise RuntimeError('There are some non-unique x-values')
+        else:
+            x, y = x_input, y_input
 
-        #xy = sorted(zip(x_input, y_input))
-        #x, y = zip(*xy)  # pylint: disable=star-args
-        #x_input_list = list(x_input)
-        #self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
-        #if len(set(self._original_index_of_xvalue)) != len(x):
-        #    raise RuntimeError('There are some non-unique original indices')
-
-        self._x = x_input
-        self._y = y_input
+        self._x = x
+        self._y = y
 
     def set_span(self, span):
+        """
+        Set the window-size for computing the least squares fit
+        
+        Parameters
+        ----------
+        span : float
+            Fraction on data length N to be considered in smoothing
+        """
         self._span = span
 
     def compute(self):
+        """
+        Perform the smoothing operations
+        """
         raise NotImplementedError
 
-    def plot(self, fName=None):
+    def plot(self, fname=None):
+        """
+        Plot the input data and resulting smooth
+        
+        Parameters
+        ----------
+        fname : str, optional
+            name of file to produce. If none, will show interactively. 
+        """
         pylab.figure()
         xy = zip(self._x, self.smooth_result)
         xy.sort()
         x, y = zip(*xy)
         pylab.plot(x, y, '-')
         pylab.plot(self._x, self._y, '.')
-        if fName:
-            pylab.savefig(fName)
+        if fname:
+            pylab.savefig(fname)
         else:
             pylab.show()
         pylab.close()
@@ -92,16 +130,23 @@ class Smoother(object):
         """
         Convert sorted smooth/residual back to as-input order
         """
-        self.smooth_result = smooth #numpy.zeros(len(self._y))
-        self.cross_validated_residual = residual#numpy.zeros(len(residual))
-        return        
-        original_x = numpy.zeros(len(self._y))
-        for i, (xval, smooth_val, residual_val) in enumerate(zip(self._x, smooth, residual)):
-            original_index = self._original_index_of_xvalue[i]
-            original_x[original_index] = xval
-            self.smooth_result[original_index] = smooth_val
-            self.cross_validated_residual[original_index] = residual_val
-        self._x = original_x
+
+        if self._original_index_of_xvalue:
+            # data was sorted. Unsort it here.
+            self.smooth_result = numpy.zeros(len(self._y))
+            self.cross_validated_residual = numpy.zeros(len(residual))
+            original_x = numpy.zeros(len(self._y))
+            for i, (xval, smooth_val, residual_val) in enumerate(zip(self._x, smooth, residual)):
+                original_index = self._original_index_of_xvalue[i]
+                original_x[original_index] = xval
+                self.smooth_result[original_index] = smooth_val
+                self.cross_validated_residual[original_index] = residual_val
+                self._x = original_x
+        else:
+            # no sorting was done. just apply results
+            self.smooth_result = smooth
+            self.cross_validated_residual = residual
+
 
 
 class BasicFixedSpanSmoother(Smoother):
@@ -128,7 +173,8 @@ class BasicFixedSpanSmoother(Smoother):
         self._update_mean_in_window()
         self._update_variance_in_window()
         for i, (xi, yi) in enumerate(zip(x, y)):
-            if (i - self._neighbors_on_each_side) > 0.0 and (i + self._neighbors_on_each_side) < len(x):
+            if ((i - self._neighbors_on_each_side) > 0.0 and
+                (i + self._neighbors_on_each_side) < len(x)):
                 self._advance_window()
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
@@ -139,21 +185,43 @@ class BasicFixedSpanSmoother(Smoother):
 
     def _compute_window_size(self):
         """
-        Make a symmetric neighborhood with J/2 values on each side of current position j
+        Determine characteristics of symmetric neighborhood with J/2 values on each side
         """
         self._neighbors_on_each_side = int(len(self._x) * self._span) / 2
         self.window_size = self._neighbors_on_each_side * 2 + 1
 
     def _update_values_in_window(self):
+        """
+        update which values are in the current window
+        """
         window_bound_upper = self._window_bound_lower + self.window_size
         self._x_in_window = self._x[self._window_bound_lower:window_bound_upper]
         self._y_in_window = self._y[self._window_bound_lower:window_bound_upper]
 
     def _update_mean_in_window(self):
+        """
+        Compute mean in window the slow way. useful for first step
+        
+        Considers all values in window
+        
+        See Also
+        --------
+        _add_observation_to_means : fast update of mean for single observation addition
+        _remove_observation_from_means : fast update of mean for single observation removal
+        
+        """
         self._mean_x_in_window = numpy.mean(self._x_in_window)
         self._mean_y_in_window = numpy.mean(self._y_in_window)
 
     def _update_variance_in_window(self):
+        """
+        compute variance and covariance in window using all values in window (slow)
+        
+        See Also
+        --------
+        _add_observation_to_variances : fast update for single observation addition
+        _remove_observation_to_variances : fast update for single observation removal
+        """
         self._covariance_in_window = sum([(xj - self._mean_x_in_window) *
                                           (yj - self._mean_y_in_window)
                       for xj, yj in zip(self._x_in_window, self._y_in_window)])
@@ -205,6 +273,10 @@ class BasicFixedSpanSmoother(Smoother):
     def _add_observation_to_variances(self, xj, yj):
         """
         Quickly update the variance and co-variance for the addition of one observation
+        
+        See Also
+        --------
+        _update_variance_in_window : compute variance considering full window
         """
         self._covariance_in_window += ((self.window_size + 1.0) / self.window_size *
                                        (xj - self._mean_x_in_window) *
@@ -223,6 +295,19 @@ class BasicFixedSpanSmoother(Smoother):
                                        (xj - self._mean_x_in_window) ** 2)
 
     def _compute_smooth_during_construction(self, xi):
+        """
+        Evaluate value of smooth at x-value xi
+        
+        Parameters
+        ----------
+        xi : float
+            Value of x where smooth value is desired
+        
+        Returns
+        -------
+        smooth_here : float
+            Value of smooth s(xi)
+        """
         if self._variance_in_window:
             beta = self._covariance_in_window / self._variance_in_window
             alpha = self._mean_y_in_window - beta * self._mean_x_in_window
@@ -233,9 +318,9 @@ class BasicFixedSpanSmoother(Smoother):
 
     def _compute_cross_validated_residual_here(self, xi, yi, smooth_here):
         """
-        Compute CV residual. 
+        Compute cross validated residual. 
         
-        This is the absolute residual from Eq. 9. 
+        This is the absolute residual from Eq. 9. in [1]
         """
         residual = abs((yi - smooth_here) / (1.0 - 1.0 / self.window_size -
                                          (xi - self._mean_x_in_window) ** 2 /
@@ -259,6 +344,22 @@ DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother
 def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     """
     Convenience function to run the basic smoother
+    
+    Parameters
+    ----------
+    x_values : iterable
+        List of x value observations
+    y_ values : iterable
+        list of y value observations
+    span : float, optional
+        Fraction of data to use as the window
+    smoother_cls : Class
+        The class of smoother to use to smooth the data
+        
+    Returns
+    -------
+    smoother : object
+        The smoother object with results stored on it. 
     """
     if smoother_cls is None:
         smoother_cls = DEFAULT_BASIC_SMOOTHER

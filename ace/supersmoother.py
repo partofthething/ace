@@ -1,5 +1,10 @@
 '''
-A variable-span data smoother.
+A variable-span data smoother. This uses the fixed-span smoother to determine
+a changing optimal span for the data based on cross-validated residuals. It
+is an adaptive smoother that requires several passes over the data. 
+
+The SuperSmoother provides a mechanism to evaluate the conditional expectations
+in the ACE algorithm. 
 
 Based on [1]
 
@@ -26,9 +31,15 @@ class SuperSmoother(smoother.Smoother):
         self._residual_smooths = []
         self._best_span_at_each_point = []
         self._smoothed_best_spans = []
-        self._bass_enhancement = 1.0  # should be between 0 and 10.
+        self._bass_enhancement = 0.0  # should be between 0 and 10.
 
     def set_bass_enhancement(self, alpha):
+        """
+        Bass enhancement amplifies the bass span
+        
+        This gives the resulting smooth a smoother look, which is sometimes desirable if
+        the underlying mechanisms are known to be smooth.
+        """
         self._bass_enhancement = alpha
 
     def compute(self):
@@ -43,14 +54,17 @@ class SuperSmoother(smoother.Smoother):
         self._store_unsorted_results(self.smooth_result, numpy.zeros(len(self.smooth_result)))
 
     def _compute_primary_smooths(self):
-
+        """
+        Compute fixed-span smooths with all of the default spans. 
+        """
         for span in DEFAULT_SPANS:
             smooth = smoother.perform_smooth(self._x, self._y, span)
             self._primary_smooths.append(smooth)
 
     def _smooth_the_residuals(self):
         """
-
+        Apply the MID_SPAN to the residuals of the primary smooths. 
+        
         "For stability reasons, it turns out to be a little better to smooth
         |r_{i}(J)| against xi" - [1]
         """
@@ -95,10 +109,16 @@ class SuperSmoother(smoother.Smoother):
         self._best_span_at_each_point = enhanced_spans
 
     def _smooth_best_span_estimates(self):
+        """
+        Apply a MID_SPAN smooth to the best span estimates at each observation
+        """
         self._smoothed_best_spans = smoother.perform_smooth(
                                self._x, self._best_span_at_each_point, MID_SPAN)
 
     def _apply_best_spans_to_primaries(self):
+        """
+        Given the best span, interpolate to compute the best smoothed value at each observation
+        """
         self.smooth_result = []
         for xi, best_span in enumerate(self._smoothed_best_spans.smooth_result):
             primary_values = [s.smooth_result[xi] for s in self._primary_smooths]
@@ -120,6 +140,9 @@ class SuperSmoother(smoother.Smoother):
         self.smooth_result = smoothed_results.smooth_result
 
 class SuperSmootherWithPlots(SuperSmoother):
+    """
+    Auxiliary subclass for researching/understanding the SuperSmoother
+    """
     def _compute_primary_smooths(self):
         super(SuperSmootherWithPlots, self)._compute_primary_smooths()
         plt.figure()
