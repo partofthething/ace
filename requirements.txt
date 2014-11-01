@@ -1,0 +1,5 @@
+ace
+numpy
+scipy
+numpydoc
+matplotlib
