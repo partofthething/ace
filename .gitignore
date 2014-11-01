@@ -2,7 +2,9 @@
 .pydevproject
 refs
 *.pyc
-*.png
+ace/test/*.png
+ace/validation/*.png
+ace/samples/*.png
 *.f
 *.so
 *.o
@@ -10,3 +12,6 @@ refs
 *.doc
 *.sh
 *~
+doc/_build
+doc/apidoc
+
