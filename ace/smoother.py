@@ -1,19 +1,16 @@
 '''
 Scatterplot smoother with a fixed span. Takes x,y scattered data and returns a set of
-(x,s) points that form a smoother curve fiting the data with moving least squares estimates.
+(x,s) points that form a smoother curve fitting the data with moving least squares estimates.
 Similar to a moving average, but with better characteristics. The fundamental issue
 with this smoother is that the choice of span (window size) is not known in advance.
 The SuperSmoother uses these smoothers to figure out which span is optimal.
 
-This is a Python port of J. Friedman's 1984 fixed-span Smoother
+This is a Python port of J. Friedman's 1982 fixed-span Smoother [Friedman82]_
 
-[1] J. Friedman, "A Variable Span Smoother", 1984
-        http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3477.pdf
-
-Example of use::
+Example::
 
     s = Smoother()
-    s.specify_data_set(x, y)
+    s.specify_data_set(x, y, sort_data = True)
     s.set_span(0.05)
     s.compute()
     smoothed_y = s.smooth_result
@@ -69,9 +66,9 @@ class Smoother(object):
 
         Parameters
         ----------
-        xValues : iterable
+        x_input : iterable
             list of floats that represent x
-        yValues : iterable
+        y_input : iterable
             list of floats that represent y(x) for each x
         sort_data : bool, optional
             If true, the data will be sorted by increasing x values.
@@ -188,8 +185,11 @@ class BasicFixedSpanSmoother(Smoother):
         """
         Determine characteristics of symmetric neighborhood with J/2 values on each side
         """
-        self._neighbors_on_each_side = int(len(self.x) * self._span) / 2
+        self._neighbors_on_each_side = int(len(self.x) * self._span) // 2
         self.window_size = self._neighbors_on_each_side * 2 + 1
+        if self.window_size <= 1:
+            # cannot do averaging with 1 point in window. Force >=2
+            self.window_size = 2
 
     def _update_values_in_window(self):
         """
