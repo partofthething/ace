@@ -6,10 +6,15 @@ is an adaptive smoother that requires several passes over the data.
 The SuperSmoother provides a mechanism to evaluate the conditional expectations
 in the ACE algorithm.
 
-Based on [1]
+Based on [Friedman82]_.
 
-    [1] J. Friedman, "A Variable Span Smoother", 1984
-        http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3477.pdf
+Example::
+
+    s = SuperSmoother()
+    s.specify_data_set(x, y, sort_data = True)
+    s.compute()
+    smoothed_y = s.smooth_result
+
 '''
 import numpy
 from matplotlib import pyplot as plt

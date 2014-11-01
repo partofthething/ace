@@ -1,5 +1,7 @@
 '''
-Unit tests for ACE methods
+Unit tests for ACE methods.
+
+These implicitly cover the SuperSmoother as well, but they don't validate it.
 '''
 
 import unittest
@@ -44,14 +46,16 @@ class TestAce(unittest.TestCase):
         data = [5, 1, 4, 6]
         increasing = [1, 2, 0, 3]
         dsort = ace.ace.sort_vector(data, increasing)
-        self.assertItemsEqual(sorted(data), dsort)
+        for item1, item2 in zip(sorted(data), dsort):
+            self.assertEqual(item1, item2)
 
     def test_unsort_vector(self):
         unsorted = [5, 1, 4, 6]
         data = [1, 4, 5, 6]
         increasing = [1, 2, 0, 3]
         dunsort = ace.ace.unsort_vector(data, increasing)
-        self.assertItemsEqual(unsorted, dunsort)
+        for item1, item2 in zip(dunsort, unsorted):
+            self.assertEqual(item1, item2)
 
 
 if __name__ == "__main__":
