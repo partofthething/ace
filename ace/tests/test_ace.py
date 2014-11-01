@@ -1,89 +1,57 @@
 '''
-Created on Sep 21, 2014
-
-@author: nick
+Unit tests for ACE methods
 '''
-from matplotlib import pyplot as plt
-import matplotlib
 
 import unittest
 
-from ace import ace
-import ace.smoother_diagnostics
-import ace.supersmoother
-import ace.validation.sample_problems as sample_problems
-import ace.validation.validate_smoothers
+import ace.ace
+import ace.samples.breiman85
 
 class TestAce(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.ace = ace.ace.ACESolver()
+        x, y = ace.samples.breiman85.build_sample_ace_problem_breiman85()
+        self.ace.specify_data_set(x, y)
+        self.ace._initialize()
 
-    def tearDown(self):
-        pass
-    # @unittest.skip('skip')
-    def test_sample_problem(self):
+    def test_compute_sorted_indices(self):
+        yprevious = self.ace.y[self.ace._yi_sorted[0]]
+        for yi in self.ace._yi_sorted[1:]:
+            yhere = self.ace.y[yi]
+            self.assertGreater(yhere, yprevious)
 
-        x, y = sample_problems.sample_ace_problem_wang04(N=200)
-        ace_solver = ace.ace.ACESolver()
-        # ace_solver = ace.smoother_diagnostics.ACESolverWithPlots()
-        # ace_solver._smoother_cls = ace.validation.validate_smoothers.SuperSmootherBreiman
-        ace_solver.x = x
-        ace_solver.y = y
-        ace_solver.solve()
-        plot_transforms(ace_solver, 'ace_results.png')
+    def test_error_is_decreasing(self):
+        err = self.ace._compute_error()
+        self.assertFalse(self.ace._error_is_decreasing(err)[0])
 
-    @unittest.skip('yo')
-    def test_sample_problem_supersmoother(self):
-        ace_solver = build_sample_problem2(N=200, ace_cls=ace.smoother_diagnostics.ACESolverWithPlots)
-        x = ace_solver.x[0]
-        y = ace_solver.y
-        # plt.figure()
-        for bass in [5]:  # range(0, 10, 3):
-            # smoother = ace.supersmoother.SuperSmoother()
-            # for smoCls in [ace.smoother.BasicFixedSpanSmootherSlowUpdate, ace.smoother.BasicFixedSpanSmoother]:
-            for smoCls in [ace.smoother.BasicFixedSpanSmoother]:
-                smoother = smoCls()
-                smoother.set_span(ace.smoother.BASS_SPAN)
-                smoother.specify_data_set(x, y)
-                smoother._bass_enhancement = bass
-                smoother.compute()
-                smoother.plot()
-#             plt.plot(x,
-#                     smoother.smooth_result,
-#                     '.',
-#                     label='Bass = {}'.format(bass))
-        # plt.legend()
-        # plt.show()
-        # plt.close()
+    def test_compute_error(self):
+        err = self.ace._compute_error()
+        self.assertNotAlmostEqual(err, 0.0)
 
-    @unittest.skip('skip')
-    def test_sample_problem2(self):
-        x, y = ace.validation.sample_problems.sample_ace_problem_breiman85(200)
-        plt.figure()
-        plt.plot(x[0], y, '.')
-        plt.savefig('sample_problem_data.png')
-        ace_solver = ace.ace.ACESolver()
-        # ace_solver = ace.smoother_diagnostics.ACESolverWithPlots()
-        ace_solver._smoother_cls = ace.supersmoother.SuperSmoother
-        # ace_solver._smoother_cls = ace.supersmoother.SuperSmootherWithPlots
-        ace_solver.x = x
-        ace_solver.y = y
-        ace_solver.solve()
-        plot_transforms(ace_solver, 'ace_results2.png')
+    def test_update_x_transforms(self):
+        err = self.ace._compute_error()
+        self.ace._update_x_transforms()
+        self.assertTrue(self.ace._error_is_decreasing(err)[0])
 
+    def test_update_y_transform(self):
+        err = self.ace._compute_error()
+        self.ace._update_x_transforms()
+        self.ace._update_y_transform()
+        self.assertTrue(self.ace._error_is_decreasing(err)[0])
 
-def plot_transforms(ace_model, fName):
-    matplotlib.rcParams.update({'font.size': 8})
-    plt.figure()
-    numCols = len(ace_model.x) / 2 + 1
-    for i in range(len(ace_model.x)):
-        plt.subplot(numCols, 2, i + 1)
-        plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
-    plt.subplot(numCols, 2, i + 2)
-    plt.plot(ace_model.y, ace_model.y_transform, '.', label='Theta')
-    plt.legend()
-    plt.savefig(fName)
+    def test_sort_vector(self):
+        data = [5, 1, 4, 6]
+        increasing = [1, 2, 0, 3]
+        dsort = ace.ace.sort_vector(data, increasing)
+        self.assertItemsEqual(sorted(data), dsort)
+
+    def test_unsort_vector(self):
+        unsorted = [5, 1, 4, 6]
+        data = [1, 4, 5, 6]
+        increasing = [1, 2, 0, 3]
+        dunsort = ace.ace.unsort_vector(data, increasing)
+        self.assertItemsEqual(unsorted, dunsort)
 
 
 if __name__ == "__main__":

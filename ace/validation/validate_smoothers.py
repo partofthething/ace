@@ -7,16 +7,16 @@ These depend on the supsmu module, which was created using f2py from Breiman's s
 from matplotlib import pyplot as plt
 import numpy
 
-import sample_problems
+import ace.samples.smoother_friedman82
 import ace.smoother as smoother
 import ace.supersmoother as supersmoother
 import mace
 
 def validate_basic_smoother():
     """
-    Runs Friedman's test from Figure 2b. 
+    Runs Friedman's test from Figure 2b.
     """
-    x, y = sort_data(*sample_problems.sample_smoother_problem_brieman82())
+    x, y = sort_data(*ace.samples.smoother_friedman82.build_sample_smoother_problem_friedman82())
     plt.figure()
     # plt.plot(x, y, '.', label='Data')
     for span in smoother.DEFAULT_SPANS:
@@ -41,7 +41,7 @@ def validate_basic_smoother_resid():
     finish_plot()
 
 def validate_supersmoother():
-    x, y = sample_problems.sample_smoother_problem_brieman82()
+    x, y = ace.samples.smoother_friedman82.build_sample_smoother_problem_friedman82()
     x, y = sort_data(x, y)
     my_smoother = smoother.perform_smooth(x, y, smoother_cls=supersmoother.SuperSmootherWithPlots)
     # smoother.DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmootherBreiman

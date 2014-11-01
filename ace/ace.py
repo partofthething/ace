@@ -27,6 +27,10 @@ easier to use ACE from other Python programs.
 '''
 
 import numpy
+try:
+    from matplotlib import pyplot as plt
+except ImportError:
+    plt = None
 
 from .supersmoother import SuperSmoother
 from .smoother import perform_smooth
@@ -215,4 +219,24 @@ def unsort_vector(data, indices_of_increasing):
     unpermutate 1-D data that is sorted by indices_of_increasing
     """
     return numpy.array([data[indices_of_increasing.index(i)] for i in range(len(data))])
+
+def plot_transforms(ace_model, fname=None):
+    """
+    Plot the transforms
+    """
+    if not plt:
+        raise ImportError('Cannot plot without the matplotlib package')
+    plt.rcParams.update({'font.size': 8})
+    plt.figure()
+    numCols = len(ace_model.x) / 2 + 1
+    for i in range(len(ace_model.x)):
+        plt.subplot(numCols, 2, i + 1)
+        plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
+    plt.subplot(numCols, 2, i + 2)
+    plt.plot(ace_model.y, ace_model.y_transform, '.', label='Theta')
+    plt.legend()
+    if fname:
+        plt.savefig(fname)
+    else:
+        plt.show()
 
