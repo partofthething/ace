@@ -1,29 +1,20 @@
-'''
+r'''
 The Alternating Condtional Expectation (ACE) algorithm
 
-ACE was invented by L. Breiman and J. Friedman [1]. It is a powerful
+ACE was invented by L. Breiman and J. Friedman [Breiman85]_. It is a powerful
 way to perform multidimensional regression without assuming
 any functional form of the model. Given a data set:
 
-    y = f(X)
+    :math:`y = f(X)`
 
-where X is made up of a number of independent variables xi, ACE
-will tell you how y varies vs. each of the individual independents xi.
+where :math:`X` is made up of a number of independent variables xi, ACE
+will tell you how :math:`y` varies vs. each of the individual independents :math:`xi`.
 This can be used to:
 
-    a) Understand the relative shape and magnitude of y's dependence on each xi
-    b) Produce a lightweight surrogate model of a more complex response
-    c) other stuff
+    * Understand the relative shape and magnitude of y's dependence on each xi
+    * Produce a lightweight surrogate model of a more complex response
+    * other stuff
 
-ACE is available from Friedman's webpage as a FORTRAN program. This
-same program has also been made available to the statistical language R in
-the form of the acepack module. This package represents a pure-Python version
-of ACE. It will allow people to understand how ACE works and will make it
-easier to use ACE from other Python programs.
-
-[1] L. Breiman and J. Friedman, "Estimating Optimal Transformations
-    for Multiple Regression and Correlation," Journal of the American Statistical
-    Association, Vol. 80, No. 391 (1985).
 '''
 
 import numpy
@@ -62,9 +53,9 @@ class ACESolver(object):
 
         Parameters
         ----------
-        xValues : list
+        x_input : list
             list of iterables, one for each independent variable
-        yValues : array
+        y_input : array
             the dependent obeservations
         """
         self.x = x_input
@@ -208,6 +199,27 @@ class ACESolver(object):
         # unsort to save in the original data
         self.y_transform = unsort_vector(sum_of_x_transformations_smooth, sorted_data_indices)
 
+    def write_input_to_file(self, fname='ace_input.txt'):
+        """
+        Write y and x values used in this run to a space-delimited txt file
+        """
+        self._write_columns(fname, self.x, self.y)
+
+    def write_transforms_to_file(self, fname='ace_transforms.txt'):
+        """
+        Write y and x transforms used in this run to a space-delimited txt file
+        """
+        self._write_columns(fname, self.x_transforms, self.y_transform)
+
+    def _write_columns(self, fname, xvals, yvals):
+        f = open(fname, 'w')
+        alldata = [yvals] + xvals
+        for datai in zip(*alldata):
+            yline = '{0: 15.9E} '.format(datai[0])
+            xline = ' '.join(['{0: 15.9E}'.format(xii) for xii in datai[1:]])
+            f.write(''.join([yline, xline, '\n']))
+        f.close()
+
 def sort_vector(data, indices_of_increasing):
     """
     permutate 1-d data using given indices
@@ -220,7 +232,7 @@ def unsort_vector(data, indices_of_increasing):
     """
     return numpy.array([data[indices_of_increasing.index(i)] for i in range(len(data))])
 
-def plot_transforms(ace_model, fname=None):
+def plot_transforms(ace_model, fname='ace_transforms.png'):
     """
     Plot the transforms
     """
@@ -232,9 +244,36 @@ def plot_transforms(ace_model, fname=None):
     for i in range(len(ace_model.x)):
         plt.subplot(numCols, 2, i + 1)
         plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
+        plt.xlabel('x{0}'.format(i))
+        plt.ylabel('phi{0}'.format(i))
     plt.subplot(numCols, 2, i + 2)
     plt.plot(ace_model.y, ace_model.y_transform, '.', label='Theta')
-    plt.legend()
+    plt.xlabel('y')
+    plt.ylabel('theta')
+    plt.tight_layout()
+
+    if fname:
+        plt.savefig(fname)
+    else:
+        plt.show()
+
+def plot_input(ace_model, fname='ace_input.png'):
+    """
+    Plot the transforms
+    """
+    if not plt:
+        raise ImportError('Cannot plot without the matplotlib package')
+    plt.rcParams.update({'font.size': 8})
+    plt.figure()
+    numCols = len(ace_model.x) / 2 + 1
+    for i in range(len(ace_model.x)):
+        plt.subplot(numCols, 2, i + 1)
+        plt.plot(ace_model.x[i], ace_model.y, '.')
+        plt.xlabel('x{0}'.format(i))
+        plt.ylabel('y'.format(i))
+
+    plt.tight_layout()
+
     if fname:
         plt.savefig(fname)
     else:
