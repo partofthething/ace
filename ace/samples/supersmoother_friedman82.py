@@ -1,5 +1,5 @@
 '''
-Problem demonstrating supersmoother from Friedman 82
+Problem demonstrating supersmoother from [Friedman82]_
 '''
 
 import matplotlib.pyplot as plt

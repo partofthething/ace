@@ -1,5 +1,5 @@
 '''
-Problem demonstrating supersmoother from Friedman 82
+Problem demonstrating supersmoother from [Friedman82]_
 '''
 
 import math
@@ -9,6 +9,8 @@ import numpy.random
 import matplotlib.pyplot as plt
 
 import ace.smoother as smoother
+
+numpy.random.seed(9287349087)
 
 def build_sample_smoother_problem_friedman82(N=200):
     """

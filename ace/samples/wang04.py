@@ -1,10 +1,12 @@
 '''
-Run the Sample problem from Wang 2004
+Run the Sample problem from [Wang04]_
 '''
 
 import numpy
 
 from ace import ace
+
+numpy.random.seed(9287349087)
 
 def build_sample_ace_problem_wang04(N=100):
     """
@@ -24,7 +26,8 @@ def run_wang04():
     ace_solver.specify_data_set(x, y)
     ace_solver.solve()
     try:
-        ace.plot_transforms(ace_solver, 'sample_ace_wang04.png')
+        ace.plot_transforms(ace_solver, 'ace_transforms_wang04.png')
+        ace.plot_input(ace_solver, 'ace_input_wang04.png')
     except ImportError:
         pass
 

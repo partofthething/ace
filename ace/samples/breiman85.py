@@ -1,5 +1,5 @@
 '''
-Run the Sample ACE problem from Breiman 1985
+Run the Sample ACE problem from [Breiman85]_
 '''
 
 import numpy
@@ -7,6 +7,8 @@ import numpy.random
 import scipy.special
 
 from ace import ace
+
+numpy.random.seed(9287349087)
 
 def build_sample_ace_problem_breiman85(N=200):
     """
