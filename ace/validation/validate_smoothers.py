@@ -87,7 +87,7 @@ def validate_average_best_span(self):
         if not (i + 1) % 20:
             print(i + 1)
     avg /= num_trials
-    plt.plot(my_smoother._x, avg, '.', label='Average JCV')
+    plt.plot(my_smoother.x, avg, '.', label='Average JCV')
     finish_plot()
 
 
@@ -142,14 +142,14 @@ class BasicFixedSpanSmootherBreiman(smoother.Smoother):
     Runs FORTRAN Smooth
     """
     def compute(self):
-        self.smooth_result, self.cross_validated_residual = run_friedman_smooth(self._x, self._y, self._span)
+        self.smooth_result, self.cross_validated_residual = run_friedman_smooth(self.x, self.y, self._span)
 
 class SuperSmootherBreiman(smoother.Smoother):
     """
     Runs FORTRAN Supersmoother
     """
     def compute(self):
-        self.smooth_result = run_freidman_supsmu(self._x, self._y)
+        self.smooth_result = run_freidman_supsmu(self.x, self.y)
         self._store_unsorted_results(self.smooth_result, numpy.zeros(len(self.smooth_result)))
 
 def sort_data(x, y):

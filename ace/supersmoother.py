@@ -1,10 +1,10 @@
 '''
 A variable-span data smoother. This uses the fixed-span smoother to determine
 a changing optimal span for the data based on cross-validated residuals. It
-is an adaptive smoother that requires several passes over the data. 
+is an adaptive smoother that requires several passes over the data.
 
 The SuperSmoother provides a mechanism to evaluate the conditional expectations
-in the ACE algorithm. 
+in the ACE algorithm.
 
 Based on [1]
 
@@ -36,7 +36,7 @@ class SuperSmoother(smoother.Smoother):
     def set_bass_enhancement(self, alpha):
         """
         Bass enhancement amplifies the bass span
-        
+
         This gives the resulting smooth a smoother look, which is sometimes desirable if
         the underlying mechanisms are known to be smooth.
         """
@@ -55,22 +55,21 @@ class SuperSmoother(smoother.Smoother):
 
     def _compute_primary_smooths(self):
         """
-        Compute fixed-span smooths with all of the default spans. 
+        Compute fixed-span smooths with all of the default spans.
         """
         for span in DEFAULT_SPANS:
-            smooth = smoother.perform_smooth(self._x, self._y, span)
+            smooth = smoother.perform_smooth(self.x, self.y, span)
             self._primary_smooths.append(smooth)
 
     def _smooth_the_residuals(self):
         """
-        Apply the MID_SPAN to the residuals of the primary smooths. 
-        
+        Apply the MID_SPAN to the residuals of the primary smooths.
+
         "For stability reasons, it turns out to be a little better to smooth
         |r_{i}(J)| against xi" - [1]
         """
         for primary_smooth in self._primary_smooths:
-            smooth = smoother.perform_smooth(
-                                             self._x,
+            smooth = smoother.perform_smooth(self.x,
                                              primary_smooth.cross_validated_residual,
                                              MID_SPAN)
             self._residual_smooths.append(smooth.smooth_result)
@@ -112,8 +111,9 @@ class SuperSmoother(smoother.Smoother):
         """
         Apply a MID_SPAN smooth to the best span estimates at each observation
         """
-        self._smoothed_best_spans = smoother.perform_smooth(
-                               self._x, self._best_span_at_each_point, MID_SPAN)
+        self._smoothed_best_spans = smoother.perform_smooth(self.x,
+                                                            self._best_span_at_each_point,
+                                                            MID_SPAN)
 
     def _apply_best_spans_to_primaries(self):
         """
@@ -128,13 +128,13 @@ class SuperSmoother(smoother.Smoother):
     def _smooth_interpolated_smooth(self):
         """
         Smooth interpolated results with tweeter span
-        
+
         A final step of the supersmoother is to smooth the interpolated values with
         the tweeter span. This is done in Breiman's supsmu.f but is not explicitly
         discussed in the publication. This step is necessary to match
-        the FORTRAN version perfectly. 
+        the FORTRAN version perfectly.
         """
-        smoothed_results = smoother.perform_smooth(self._x,
+        smoothed_results = smoother.perform_smooth(self.x,
                                                    self.smooth_result,
                                                    TWEETER_SPAN)
         self.smooth_result = smoothed_results.smooth_result
@@ -147,8 +147,8 @@ class SuperSmootherWithPlots(SuperSmoother):
         super(SuperSmootherWithPlots, self)._compute_primary_smooths()
         plt.figure()
         for smooth in self._primary_smooths:
-            plt.plot(self._x, smooth.smooth_result)
-        plt.plot(self._x, self._y, '.')
+            plt.plot(self.x, smooth.smooth_result)
+        plt.plot(self.x, self.y, '.')
         plt.savefig('primary_smooths.png')
         plt.close()
 
@@ -156,7 +156,7 @@ class SuperSmootherWithPlots(SuperSmoother):
         super(SuperSmootherWithPlots, self)._smooth_the_residuals()
         plt.figure()
         for residual, span in zip(self._residual_smooths, smoother.DEFAULT_SPANS):
-            plt.plot(self._x, residual, label='{0}'.format(span))
+            plt.plot(self.x, residual, label='{0}'.format(span))
         plt.legend(loc='upper left')
         plt.savefig('residual_smooths.png')
         plt.close()
@@ -164,15 +164,15 @@ class SuperSmootherWithPlots(SuperSmoother):
     def _select_best_smooth_at_each_point(self):
         super(SuperSmootherWithPlots, self)._select_best_smooth_at_each_point()
         plt.figure()
-        plt.plot(self._x, self._best_span_at_each_point, label='Fresh')
+        plt.plot(self.x, self._best_span_at_each_point, label='Fresh')
 
     def _enhance_bass(self):
         super(SuperSmootherWithPlots, self)._enhance_bass()
-        plt.plot(self._x, self._best_span_at_each_point, label='Enhanced bass')
+        plt.plot(self.x, self._best_span_at_each_point, label='Enhanced bass')
 
     def _smooth_best_span_estimates(self):
         super(SuperSmootherWithPlots, self)._smooth_best_span_estimates()
-        plt.plot(self._x, self._smoothed_best_spans.smooth_result, label='Smoothed')
+        plt.plot(self.x, self._smoothed_best_spans.smooth_result, label='Smoothed')
         plt.legend(loc='upper left')
         plt.savefig('best_spans.png')
         plt.close()

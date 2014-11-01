@@ -21,23 +21,23 @@ class TestAce(unittest.TestCase):
 
     def tearDown(self):
         pass
-    @unittest.skip('skip')
+    # @unittest.skip('skip')
     def test_sample_problem(self):
 
-        x, y = sample_problems.sample_ace_problem_wang04(N=100)
+        x, y = sample_problems.sample_ace_problem_wang04(N=200)
         ace_solver = ace.ace.ACESolver()
         # ace_solver = ace.smoother_diagnostics.ACESolverWithPlots()
         # ace_solver._smoother_cls = ace.validation.validate_smoothers.SuperSmootherBreiman
-        ace_solver._x = x
-        ace_solver._y = y
+        ace_solver.x = x
+        ace_solver.y = y
         ace_solver.solve()
         plot_transforms(ace_solver, 'ace_results.png')
 
     @unittest.skip('yo')
     def test_sample_problem_supersmoother(self):
         ace_solver = build_sample_problem2(N=200, ace_cls=ace.smoother_diagnostics.ACESolverWithPlots)
-        x = ace_solver._x[0]
-        y = ace_solver._y
+        x = ace_solver.x[0]
+        y = ace_solver.y
         # plt.figure()
         for bass in [5]:  # range(0, 10, 3):
             # smoother = ace.supersmoother.SuperSmoother()
@@ -57,18 +57,18 @@ class TestAce(unittest.TestCase):
         # plt.show()
         # plt.close()
 
-    #@unittest.skip('skip')
+    @unittest.skip('skip')
     def test_sample_problem2(self):
-        x, y = ace.validation.sample_problems.sample_ace_problem_breiman85(400)
+        x, y = ace.validation.sample_problems.sample_ace_problem_breiman85(200)
         plt.figure()
         plt.plot(x[0], y, '.')
         plt.savefig('sample_problem_data.png')
         ace_solver = ace.ace.ACESolver()
         # ace_solver = ace.smoother_diagnostics.ACESolverWithPlots()
         ace_solver._smoother_cls = ace.supersmoother.SuperSmoother
-        #ace_solver._smoother_cls = ace.supersmoother.SuperSmootherWithPlots
-        ace_solver._x = x
-        ace_solver._y = y
+        # ace_solver._smoother_cls = ace.supersmoother.SuperSmootherWithPlots
+        ace_solver.x = x
+        ace_solver.y = y
         ace_solver.solve()
         plot_transforms(ace_solver, 'ace_results2.png')
 
@@ -76,12 +76,12 @@ class TestAce(unittest.TestCase):
 def plot_transforms(ace_model, fName):
     matplotlib.rcParams.update({'font.size': 8})
     plt.figure()
-    numCols = len(ace_model._x) / 2 + 1
-    for i in range(len(ace_model._x)):
-        plt.subplot(2, numCols, i + 1)
-        plt.plot(ace_model._x[i], ace_model._x_transforms[i], '.', label='Phi {0}'.format(i))
-    plt.subplot(2, numCols, i + 2)
-    plt.plot(ace_model._y, ace_model._y_transform, '.', label='Theta')
+    numCols = len(ace_model.x) / 2 + 1
+    for i in range(len(ace_model.x)):
+        plt.subplot(numCols, 2, i + 1)
+        plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
+    plt.subplot(numCols, 2, i + 2)
+    plt.plot(ace_model.y, ace_model.y_transform, '.', label='Theta')
     plt.legend()
     plt.savefig(fName)
 
