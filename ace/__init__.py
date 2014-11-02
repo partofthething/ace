@@ -42,11 +42,11 @@ def _get_version():
 
 __version__ = _get_version()
 
-import ace
-import model
-import smoother
-import supersmoother
-import samples
-import tests
+from . import ace
+from . import model
+from . import smoother
+from . import supersmoother
+from . import samples
+from . import tests
 
 
