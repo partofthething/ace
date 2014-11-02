@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
-with open('README.txt') as f:
+with open('README.rst') as f:
     long_description = f.read()
 
 setup(name='ace',
-    version='0.2',
+    version='0.2-1',
     description='Non-parametric multivariate regressions by Alternating Conditional Expectations',
     author='Nick Touran',
     author_email='ace@partofthething.com',
