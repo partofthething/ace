@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(name='ace',
     version='0.1',
-    description='Alternating Conditional Expectations',
+    description='Non-parametric multivariate regressions by Alternating Conditional Expectations',
     author='Nick Touran',
     author_email='ace@partofthething.com',
     url='https://github.com/partofthething/ace',
@@ -20,5 +20,5 @@ setup(name='ace',
         'Programming Language :: Python :: 3.4',
 
         ],
-      install_requires=['numpy'],
+      install_requires=['numpy', 'numpydoc', 'scipy'],
      )

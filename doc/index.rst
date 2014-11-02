@@ -49,6 +49,11 @@ To install ace directly from source, run::
 	cd ace
 	python setup.py install
 
+.. note::
+
+	If you don't have git, you can just download the source directly from
+	`here <https://github.com/partofthething/ace/archive/master.zip>`_.
+
 You can verify that the installation completed successfully by running the automated test
 suite::
 
