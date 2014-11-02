@@ -4,7 +4,7 @@ Run the Sample problem from [Wang04]_
 
 import numpy
 
-from ace import ace
+from .. import ace
 
 numpy.random.seed(9287349087)
 

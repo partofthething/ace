@@ -6,7 +6,7 @@ import numpy
 import numpy.random
 import scipy.special
 
-from ace import ace
+from .. import ace
 
 numpy.random.seed(9287349087)
 

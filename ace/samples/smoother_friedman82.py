@@ -8,7 +8,7 @@ import numpy
 import numpy.random
 import matplotlib.pyplot as plt
 
-import ace.smoother as smoother
+import ..smoother as smoother
 
 numpy.random.seed(9287349087)
 

@@ -5,7 +5,7 @@ Problem demonstrating supersmoother from [Friedman82]_
 import matplotlib.pyplot as plt
 
 import smoother_friedman82
-from ace.supersmoother import SuperSmoother
+from ..supersmoother import SuperSmoother
 
 def run_friedman82_super():
     """

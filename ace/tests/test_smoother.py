@@ -4,7 +4,7 @@ Smoother unit tests
 '''
 import unittest
 
-from ace import smoother
+from .. import smoother
 
 class TestSmoother(unittest.TestCase):
     def setUp(self):
