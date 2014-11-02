@@ -14,4 +14,9 @@ ace/samples/*.png
 *~
 doc/_build
 doc/apidoc
-
+build
+dist
+ace.egg-info
+MANIFEST
+.settings*
+ace/tests/*.txt

@@ -63,14 +63,10 @@ Using ACE
 =========
 The simplest way to run ACE and get results is to use the
 :py:class:`Model <ace.model.Model>` object. But first you need some data. Let's
-assume you have two independent variables and one dependent variable and that you
-are storing data in the ``x`` and ``y`` variables, like this::
+just grab some from one of the sample problems like this::
 
-	>>> x
-	[(0.1,0.2,0.0.05,...),
-	 (1,5,3,6,...)]
-	>>> y
-	[10.0,20.0,15.0,...]
+    from ace.samples import wang04
+    x, y = wang04.build_sample_ace_problem_wang04(N=200)
 
 Then you an run ACE on it like this::
 
@@ -83,7 +79,7 @@ Now you have a full ACE regression built up. You can now
 evaluate ``y`` as a function of any values of ``x`` using
 :py:meth:`eval <ace.model.Model.eval>`, like this::
 
-	myace.eval[(0.11, 5.4)]
+	myace.eval([0.1, 0.2, 0.5, 0.3, 0.5])
 
 You can also plot your transforms or export the results::
 

@@ -25,5 +25,7 @@ def run_friedman82_super():
     plt.ylabel('y')
     plt.savefig('sample_supersmoother_friedman82.png')
 
+    return smooth
+
 if __name__ == '__main__':
     run_friedman82_super()

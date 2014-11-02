@@ -31,5 +31,7 @@ def run_breiman85():
     except ImportError:
         pass
 
+    return ace_solver
+
 if __name__ == '__main__':
     run_breiman85()

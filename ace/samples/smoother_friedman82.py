@@ -41,6 +41,7 @@ def run_friedman82_basic():
     plt.title('Demo of fixed-span smoothers from Friedman 82')
     plt.savefig('sample_friedman82.png')
 
+    return smooth
 
 if __name__ == '__main__':
     run_friedman82_basic()

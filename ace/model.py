@@ -103,7 +103,7 @@ class Model(object):
                                                              len(x_values)))
 
         sum_phi = sum([phi(xi) for phi, xi in zip(self.phi_continuous, x_values)])
-        return self.inverse_theta_continuous(sum_phi)
+        return float(self.inverse_theta_continuous(sum_phi))
 
 
 

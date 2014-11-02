@@ -32,4 +32,7 @@ for smoothing scatterplot data.
 
 .. [Breiman85] L. BREIMAN and J. H. FRIEDMAN, "Estimating optimal transformations for multiple regression and
    correlation," Journal of the American Statistical Association, 80, 580 (1985).
-   `[Link] <http://www.jstor.org/discover/10.2307/2288477?uid=2&uid=4&sid=21104902100507>`_
+   `[PDF at JSTOR] <http://www.jstor.org/discover/10.2307/2288477?uid=2&uid=4&sid=21104902100507>`_
+
+.. [Friedman82] J. H. FRIEDMAN and W. STUETZLE, "Smoothing of scatterplots," ORION-003, Stanford
+   University, (1982). `[PDF at Stanford] <http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3013.pdf>`_
