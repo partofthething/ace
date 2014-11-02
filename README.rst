@@ -61,26 +61,34 @@ suite in the install directory::
 
 Using it
 --------
-To use, get some sample data::
+To use, get some sample data:
+
+.. code:: python
 
     from ace.samples import wang04
     x, y = wang04.build_sample_ace_problem_wang04(N=200)
 
-and run::
+and run:
+
+.. code:: python
 
     from ace import model
     myace = model.Model()
     myace.build_model_from_xy(x, y)
     myace.eval([0.1, 0.2, 0.5, 0.3, 0.5])
 
-For some plotting (matplotlib required), try::
+For some plotting (matplotlib required), try:
+
+.. code:: python
 
     from ace import ace
     ace.plot_transforms(myace, fname = 'mytransforms.pdf')
     myace.ace.write_transforms_to_file(fname = 'mytransforms.txt')
 
 Note that you could alternatively have loaded your data from a whitespace delimited
-text file::
+text file:
+
+.. code:: python
 
 	myace.build_model_from_txt(fname = 'myinput.txt')
 
