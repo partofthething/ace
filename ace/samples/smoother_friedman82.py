@@ -8,7 +8,7 @@ import numpy
 import numpy.random
 import matplotlib.pyplot as plt
 
-import ..smoother as smoother
+from ace import smoother
 
 def build_sample_smoother_problem_friedman82(N=200):
     """
