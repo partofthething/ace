@@ -8,9 +8,7 @@ import numpy
 import numpy.random
 import matplotlib.pyplot as plt
 
-import ..smoother as smoother
-
-numpy.random.seed(9287349087)
+from ace import smoother
 
 def build_sample_smoother_problem_friedman82(N=200):
     """
