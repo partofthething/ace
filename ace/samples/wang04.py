@@ -6,8 +6,6 @@ import numpy
 
 from .. import ace
 
-numpy.random.seed(9287349087)
-
 def build_sample_ace_problem_wang04(N=100):
     """
     Sample problem from Wang 2004
@@ -35,3 +33,4 @@ def run_wang04():
 
 if __name__ == '__main__':
     run_wang04()
+

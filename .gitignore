@@ -20,3 +20,5 @@ ace.egg-info
 MANIFEST
 .settings*
 ace/tests/*.txt
+*.swp
+

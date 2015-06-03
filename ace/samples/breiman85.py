@@ -8,8 +8,6 @@ import scipy.special
 
 from .. import ace
 
-numpy.random.seed(9287349087)
-
 def build_sample_ace_problem_breiman85(N=200):
     """
     Sample problem from Breiman 1985
@@ -35,3 +33,4 @@ def run_breiman85():
 
 if __name__ == '__main__':
     run_breiman85()
+
