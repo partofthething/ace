@@ -84,7 +84,7 @@ For some plotting (matplotlib required), try:
 .. code:: python
 
     from ace import ace
-    ace.plot_transforms(myace, fname = 'mytransforms.pdf')
+    ace.plot_transforms(myace.ace, fname = 'mytransforms.pdf')
     myace.ace.write_transforms_to_file(fname = 'mytransforms.txt')
 
 Note that you could alternatively have loaded your data from a whitespace delimited
