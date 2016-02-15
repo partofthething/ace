@@ -7,7 +7,7 @@ These depend on the supsmu module, which was created using f2py from Breiman's s
 from matplotlib import pyplot as plt
 import numpy
 
-import ace.samples.smoother_friedman82
+from ace.samples import smoother_friedman82
 import ace.smoother as smoother
 import ace.supersmoother as supersmoother
 
@@ -22,7 +22,7 @@ def validate_basic_smoother():
     """
     Runs Friedman's test from Figure 2b.
     """
-    x, y = sort_data(*ace.samples.smoother_friedman82.build_sample_smoother_problem_friedman82())
+    x, y = sort_data(*smoother_friedman82.build_sample_smoother_problem_friedman82())
     plt.figure()
     # plt.plot(x, y, '.', label='Data')
     for span in smoother.DEFAULT_SPANS:
@@ -37,7 +37,7 @@ def validate_basic_smoother_resid():
     """
     compare residuals
     """
-    x, y = sort_data(*sample_problems.sample_smoother_problem_brieman82())
+    x, y = sort_data(*smoother_friedman82.build_sample_smoother_problem_friedman82())
     plt.figure()
     for span in smoother.DEFAULT_SPANS:
         my_smoother = smoother.perform_smooth(x, y, span)
@@ -47,7 +47,7 @@ def validate_basic_smoother_resid():
     finish_plot()
 
 def validate_supersmoother():
-    x, y = ace.samples.smoother_friedman82.build_sample_smoother_problem_friedman82()
+    x, y = smoother_friedman82.build_sample_smoother_problem_friedman82()
     x, y = sort_data(x, y)
     my_smoother = smoother.perform_smooth(x, y, smoother_cls=supersmoother.SuperSmootherWithPlots)
     # smoother.DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmootherBreiman
@@ -61,7 +61,7 @@ def validate_supersmoother():
     plt.savefig('supersmoother_validation.png')
 
 def validate_supersmoother_bass():
-    x, y = sample_problems.sample_smoother_problem_brieman82()
+    x, y = smoother_friedman82.build_sample_smoother_problem_friedman82()
     plt.figure()
     plt.plot(x, y, '.', label='Data')
     for bass in range(0, 10, 3):
@@ -85,7 +85,7 @@ def validate_average_best_span(self):
     num_trials = 400
     avg = numpy.zeros(N)
     for i in range(num_trials):
-        x, y = sample_problems.sample_smoother_problem_brieman82(N=N)
+        x, y = smoother_friedman82.build_sample_smoother_problem_friedman82(N=N)
         my_smoother = smoother.perform_smooth(
                              x, y,
                              smoother_cls=supersmoother.SuperSmoother)
