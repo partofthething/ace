@@ -136,8 +136,8 @@ design optimization study of nuclear reactor cores [Touran12]_.
 
 License
 -------
-This package is released under the MIT License, reproduced
-`here <https://github.com/partofthething/ace/blob/master/LICENSE>`_.
+This package is released under the MIT License, `reproduced
+here <https://github.com/partofthething/ace/blob/master/LICENSE>`_.
 
 References
 ----------

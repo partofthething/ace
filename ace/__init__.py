@@ -42,9 +42,6 @@ def _get_version():
 
 __version__ = _get_version()
 
-import numpy.random
-numpy.random.seed(4144674543)
-
 from . import ace
 from . import model
 from . import smoother
