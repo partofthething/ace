@@ -10,7 +10,13 @@ import numpy
 import ace.samples.smoother_friedman82
 import ace.smoother as smoother
 import ace.supersmoother as supersmoother
-import mace
+
+try:
+    import mace
+except ImportError:
+    print("WARNING: An F2Pyd version of Breiman's supsmu is not available. "
+          "Validations will not work")
+    raise
 
 def validate_basic_smoother():
     """
@@ -159,6 +165,6 @@ def sort_data(x, y):
     return x, y
 
 if __name__ == '__main__':
-    # validate_basic_smoother()
+    validate_basic_smoother()
     # validate_basic_smoother_resid()
-    validate_supersmoother()
+    #validate_supersmoother()
