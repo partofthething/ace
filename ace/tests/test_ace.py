@@ -22,6 +22,12 @@ class TestAce(unittest.TestCase):
         for yi in self.ace._yi_sorted[1:]:
             yhere = self.ace.y[yi]
             self.assertGreater(yhere, yprevious)
+            yprevious = yhere
+        xprevious = self.ace.x[0][self.ace._xi_sorted[0][0]]
+        for xi in self.ace._xi_sorted[1:]:
+            xhere = self.ace.x[xi]
+            self.assertGreater(xhere, xprevious)
+            xprevious = xhere
 
     def test_error_is_decreasing(self):
         err = self.ace._compute_error()

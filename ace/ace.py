@@ -56,7 +56,7 @@ class ACESolver(object):
         x_input : list
             list of iterables, one for each independent variable
         y_input : array
-            the dependent obeservations
+            the dependent observations
         """
         self.x = x_input
         self.y = y_input
@@ -85,7 +85,9 @@ class ACESolver(object):
 
     def _compute_sorted_indices(self):
         """
-        The smoothers need sorted data. This sorts it from the perspective of each transform.
+        The smoothers need sorted data. This sorts it from the perspective of each column.
+
+        if self._x[0][3] is the 9th-smallest value in self._x[0], then  _xi_sorted[3] = 8
 
         We only have to sort the data once.
         """
@@ -148,9 +150,13 @@ class ACESolver(object):
 
         This is the first of the eponymous conditional expectations. The conditional
         expectations are computed using the SuperSmoother.
+
         """
 
+        # start by subtracting all transforms
         theta_minus_phis = self.y_transform - numpy.sum(self.x_transforms, axis=0)
+
+        # add one transform at a time so as to exclude it from the subtracted sum
         for xtransform_index in range(len(self.x_transforms)):
             xtransform = self.x_transforms[xtransform_index]
             sorted_data_indices = self._xi_sorted[xtransform_index]
@@ -169,6 +175,7 @@ class ACESolver(object):
             unsorted_xt = unsort_vector(updated_x_transform_smooth, sorted_data_indices)
             self.x_transforms[xtransform_index] = unsorted_xt
 
+            # update main expession with new smooth. This was done in the original FORTRAN
             tmp_unsorted = unsort_vector(to_smooth, sorted_data_indices)
             theta_minus_phis = tmp_unsorted - unsorted_xt
 

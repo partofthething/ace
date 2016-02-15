@@ -49,8 +49,8 @@ def validate_supersmoother():
     mace_result = run_mace_smothr(x, y, bass_enhancement=0.0)
     plt.plot(x, y, '.', label='Data')
     plt.plot(x, my_smoother.smooth_result, '-', label='pyace')
-    plt.plot(x, supsmu_result, '-', label='SUPSMU')
-    plt.plot(x, mace_result, '-', label='SMOOTH')
+    plt.plot(x, supsmu_result, '--', label='SUPSMU')
+    plt.plot(x, mace_result, ':', label='SMOOTH')
     plt.legend()
     plt.savefig('supersmoother_validation.png')
 
