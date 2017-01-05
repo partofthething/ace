@@ -1,5 +1,7 @@
-'''
-Scatterplot smoother with a fixed span. Takes x,y scattered data and returns a set of
+"""
+Scatterplot smoother with a fixed span.
+
+Takes x,y scattered data and returns a set of
 (x,s) points that form a smoother curve fitting the data with moving least squares estimates.
 Similar to a moving average, but with better characteristics. The fundamental issue
 with this smoother is that the choice of span (window size) is not known in advance.
@@ -15,11 +17,10 @@ Example::
     s.compute()
     smoothed_y = s.smooth_result
 
-
-'''
+"""
 
 import numpy
-import pylab
+import matplotlib.pyplot as plt
 
 TWEETER_SPAN = 0.05
 MID_SPAN = 0.2
@@ -27,11 +28,8 @@ BASS_SPAN = 0.5
 
 DEFAULT_SPANS = (TWEETER_SPAN, MID_SPAN, BASS_SPAN)
 
-class Smoother(object):
-    '''
-    Smoothers accept data and produce smoother curves that fit the data.
-    '''
-
+class Smoother(object):  # pylint: disable=too-many-instance-attributes
+    """Smoother that accepts data and produces smoother curves that fit the data."""
     def __init__(self):
         self.x = []
         self.y = []
@@ -52,9 +50,7 @@ class Smoother(object):
         self._neighbors_on_each_side = None
 
     def add_data_point_xy(self, x, y):
-        """
-        add a new data point to the data set to be smoothed
-        """
+        """Add a new data point to the data set to be smoothed."""
         self.x.append(x)
         self.y.append(y)
 
@@ -75,7 +71,7 @@ class Smoother(object):
         """
         if sort_data:
             xy = sorted(zip(x_input, y_input))
-            x, y = zip(*xy)  # pylint: disable=star-args
+            x, y = zip(*xy)
             x_input_list = list(x_input)
             self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
             if len(set(self._original_index_of_xvalue)) != len(x):
@@ -88,7 +84,7 @@ class Smoother(object):
 
     def set_span(self, span):
         """
-        Set the window-size for computing the least squares fit
+        Set the window-size for computing the least squares fit.
 
         Parameters
         ----------
@@ -98,31 +94,28 @@ class Smoother(object):
         self._span = span
 
     def compute(self):
-        """
-        Perform the smoothing operations
-        """
+        """Perform the smoothing operations."""
         raise NotImplementedError
 
     def plot(self, fname=None):
         """
-        Plot the input data and resulting smooth
+        Plot the input data and resulting smooth.
 
         Parameters
         ----------
         fname : str, optional
             name of file to produce. If none, will show interactively.
         """
-        pylab.figure()
-        xy = zip(self.x, self.smooth_result)
-        xy.sort()
-        x, y = zip(*xy)  # pylint: disable=star-args
-        pylab.plot(x, y, '-')
-        pylab.plot(self.x, self.y, '.')
+        plt.figure()
+        xy = sorted(zip(self.x, self.smooth_result))
+        x, y = zip(*xy)
+        plt.plot(x, y, '-')
+        plt.plot(self.x, self.y, '.')
         if fname:
-            pylab.savefig(fname)
+            plt.savefig(fname)
         else:
-            pylab.show()
-        pylab.close()
+            plt.show()
+        plt.close()
 
     def _store_unsorted_results(self, smooth, residual):
         """
@@ -147,9 +140,9 @@ class Smoother(object):
 
 
 
-class BasicFixedSpanSmoother(Smoother):
+class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-attributes
     """
-    A basic fixed-span smoother
+    A basic fixed-span smoother.
 
     Simple least-squares linear local smoother.
 
@@ -157,9 +150,7 @@ class BasicFixedSpanSmoother(Smoother):
     """
 
     def compute(self):
-        """
-        Perform the smoothing operations
-        """
+        """Perform the smoothing operations."""
         self._compute_window_size()
         smooth = []
         residual = []
@@ -172,7 +163,7 @@ class BasicFixedSpanSmoother(Smoother):
         self._update_variance_in_window()
         for i, (xi, yi) in enumerate(zip(x, y)):
             if ((i - self._neighbors_on_each_side) > 0.0 and
-                (i + self._neighbors_on_each_side) < len(x)):
+                    (i + self._neighbors_on_each_side) < len(x)):
                 self._advance_window()
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
@@ -182,9 +173,7 @@ class BasicFixedSpanSmoother(Smoother):
         self._store_unsorted_results(smooth, residual)
 
     def _compute_window_size(self):
-        """
-        Determine characteristics of symmetric neighborhood with J/2 values on each side
-        """
+        """Determine characteristics of symmetric neighborhood with J/2 values on each side."""
         self._neighbors_on_each_side = int(len(self.x) * self._span) // 2
         self.window_size = self._neighbors_on_each_side * 2 + 1
         if self.window_size <= 1:
@@ -192,16 +181,14 @@ class BasicFixedSpanSmoother(Smoother):
             self.window_size = 2
 
     def _update_values_in_window(self):
-        """
-        update which values are in the current window
-        """
+        """Update which values are in the current window."""
         window_bound_upper = self._window_bound_lower + self.window_size
         self._x_in_window = self.x[self._window_bound_lower:window_bound_upper]
         self._y_in_window = self.y[self._window_bound_lower:window_bound_upper]
 
     def _update_mean_in_window(self):
         """
-        Compute mean in window the slow way. useful for first step
+        Compute mean in window the slow way. useful for first step.
 
         Considers all values in window
 
@@ -216,7 +203,7 @@ class BasicFixedSpanSmoother(Smoother):
 
     def _update_variance_in_window(self):
         """
-        compute variance and covariance in window using all values in window (slow)
+        Compute variance and covariance in window using all values in window (slow).
 
         See Also
         --------
@@ -231,9 +218,7 @@ class BasicFixedSpanSmoother(Smoother):
                                         in self._x_in_window])
 
     def _advance_window(self):
-        """
-        Update values in current window and the current window means and variances.
-        """
+        """Update values in current window and the current window means and variances."""
         x_to_remove, y_to_remove = self._x_in_window[0], self._y_in_window[0]
 
         self._window_bound_lower += 1
@@ -244,34 +229,26 @@ class BasicFixedSpanSmoother(Smoother):
         self._add_observation(x_to_add, y_to_add)
 
     def _remove_observation(self, x_to_remove, y_to_remove):
-        """
-        Removes observation from window, updating means/variance efficiently
-        """
+        """Removes observation from window, updating means/variance efficiently."""
         self._remove_observation_from_variances(x_to_remove, y_to_remove)
         self._remove_observation_from_means(x_to_remove, y_to_remove)
         self.window_size -= 1
 
     def _add_observation(self, x_to_add, y_to_add):
-        """
-        Adds observation to window, updating means/variance efficiently
-        """
+        """Adds observation to window, updating means/variance efficiently."""
         self._add_observation_to_means(x_to_add, y_to_add)
         self._add_observation_to_variances(x_to_add, y_to_add)
         self.window_size += 1
 
     def _add_observation_to_means(self, xj, yj):
-        """
-        Update the means without recalculating for the addition of one observation
-        """
+        """Update the means without recalculating for the addition of one observation."""
         self._mean_x_in_window = ((self.window_size * self._mean_x_in_window + xj) /
                                   (self.window_size + 1.0))
         self._mean_y_in_window = ((self.window_size * self._mean_y_in_window + yj) /
                                   (self.window_size + 1.0))
 
     def _remove_observation_from_means(self, xj, yj):
-        """
-        Update the means without recalculating for the deletion of one observation
-        """
+        """Update the means without recalculating for the deletion of one observation."""
         self._mean_x_in_window = ((self.window_size * self._mean_x_in_window - xj) /
                                   (self.window_size - 1.0))
         self._mean_y_in_window = ((self.window_size * self._mean_y_in_window - yj) /
@@ -279,7 +256,7 @@ class BasicFixedSpanSmoother(Smoother):
 
     def _add_observation_to_variances(self, xj, yj):
         """
-        Quickly update the variance and co-variance for the addition of one observation
+        Quickly update the variance and co-variance for the addition of one observation.
 
         See Also
         --------
@@ -290,16 +267,14 @@ class BasicFixedSpanSmoother(Smoother):
         self._variance_in_window += term1 * (xj - self._mean_x_in_window)
 
     def _remove_observation_from_variances(self, xj, yj):
-        """
-        Quickly update the variance and co-variance for the deletion of one observation
-        """
+        """Quickly update the variance and co-variance for the deletion of one observation."""
         term1 = self.window_size / (self.window_size - 1.0) * (xj - self._mean_x_in_window)
         self._covariance_in_window -= term1 * (yj - self._mean_y_in_window)
         self._variance_in_window -= term1 * (xj - self._mean_x_in_window)
 
     def _compute_smooth_during_construction(self, xi):
         """
-        Evaluate value of smooth at x-value xi
+        Evaluate value of smooth at x-value xi.
 
         Parameters
         ----------
@@ -332,9 +307,8 @@ class BasicFixedSpanSmoother(Smoother):
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
     """
-    Uses slow means and variances at each step. Used to validate fast updates
+    Use slow means and variances at each step. Used to validate fast updates.
     """
-
     def _advance_window(self):
         self._window_bound_lower += 1
         self._update_values_in_window()
@@ -342,11 +316,12 @@ class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
         self._update_variance_in_window()
 
 
-DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother
+DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother  # pylint: disable=invalid-name
+
 
 def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     """
-    Convenience function to run the basic smoother
+    Convenience function to run the basic smoother.
 
     Parameters
     ----------
@@ -371,6 +346,7 @@ def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     smoother.set_span(span)
     smoother.compute()
     return smoother
+
 
 if __name__ == '__main__':
     pass

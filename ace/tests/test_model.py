@@ -4,9 +4,9 @@ Unit tests for ace model.
 import unittest
 import os
 
-from .. import model
-from ..samples import breiman85
-from ..samples import wang04
+from ace import model
+from ace.samples import breiman85
+from ace.samples import wang04
 
 class TestModel(unittest.TestCase):
 

@@ -1,5 +1,5 @@
-r'''
-The Alternating Condtional Expectation (ACE) algorithm
+r"""
+The Alternating Condtional Expectation (ACE) algorithm.
 
 ACE was invented by L. Breiman and J. Friedman [Breiman85]_. It is a powerful
 way to perform multidimensional regression without assuming
@@ -15,7 +15,7 @@ This can be used to:
     * Produce a lightweight surrogate model of a more complex response
     * other stuff
 
-'''
+"""
 
 import numpy
 try:
@@ -26,14 +26,15 @@ except ImportError:
 from .supersmoother import SuperSmoother
 from .smoother import perform_smooth
 
+
 MAX_OUTERS = 200
 
-class ACESolver(object):
-    '''
-    Runs the Alternating Conditional Expectation algorithm to perform regressions
-    '''
+
+class ACESolver(object):  # pylint: disable=too-many-instance-attributes
+    """The Alternating Conditional Expectation algorithm to perform regressions."""
 
     def __init__(self):
+        """Solver constructor."""
         self._last_inner_error = float('inf')
         self._last_outer_error = float('inf')
         self.x = []
@@ -45,11 +46,10 @@ class ACESolver(object):
         self._smoother_cls = SuperSmoother
         self._outer_iters = 0
         self._inner_iters = 0
-        self._N = None
 
     def specify_data_set(self, x_input, y_input):
         """
-        Define input to ACE
+        Define input to ACE.
 
         Parameters
         ----------
@@ -62,9 +62,7 @@ class ACESolver(object):
         self.y = y_input
 
     def solve(self):
-        """
-        Run the ACE calculational loop
-        """
+        """Run the ACE calculational loop."""
         self._initialize()
         while self._outer_error_is_decreasing() and self._outer_iters < MAX_OUTERS:
             print('* Starting outer iteration {0:03d}. Current err = {1:12.5E}'
@@ -74,13 +72,10 @@ class ACESolver(object):
             self._outer_iters += 1
 
     def _initialize(self):
-        """
-        Set up and normalize initial data once input data is specified
-        """
-        self._N = len(self.y)
+        """Set up and normalize initial data once input data is specified."""
         self.y_transform = self.y - numpy.mean(self.y)
         self.y_transform /= numpy.std(self.y_transform)
-        self.x_transforms = [numpy.zeros(self._N) for xi in self.x]
+        self.x_transforms = [numpy.zeros(len(self.y)) for _xi in self.x]
         self._compute_sorted_indices()
 
     def _compute_sorted_indices(self):
@@ -101,35 +96,24 @@ class ACESolver(object):
         self._xi_sorted = sorted_indices[1:]  # list of lists (like self.x)
 
     def _outer_error_is_decreasing(self):
-        """
-        True if outer iteration error is decreasing
-        """
+        """True if outer iteration error is decreasing."""
         is_decreasing, self._last_outer_error = self._error_is_decreasing(self._last_outer_error)
         return is_decreasing
 
     def _error_is_decreasing(self, last_error):
-        """
-        True if current error is less than last_error
-        """
+        """True if current error is less than last_error."""
         current_error = self._compute_error()
-        if current_error < last_error:
-            is_decreasing = True
-        else:
-            is_decreasing = False
+        is_decreasing = current_error < last_error
         return is_decreasing, current_error
 
     def _compute_error(self):
-        """
-        Computes unexplained error
-        """
+        """Compute unexplained error."""
         sum_x = sum(self.x_transforms)
         err = sum((self.y_transform - sum_x) ** 2) / len(sum_x)
         return err
 
     def _iterate_to_update_x_transforms(self):
-        """
-        Perform the inner iteration
-        """
+        """Perform the inner iteration."""
         self._inner_iters = 0
         self._last_inner_error = float('inf')
         while self._inner_error_is_decreasing():
@@ -144,15 +128,13 @@ class ACESolver(object):
 
     def _update_x_transforms(self):
         """
-        Compute a new set of x-transform functions phik
+        Compute a new set of x-transform functions phik.
 
         phik(xk) = theta(y) - sum of phii(xi) over i!=k
 
         This is the first of the eponymous conditional expectations. The conditional
         expectations are computed using the SuperSmoother.
-
         """
-
         # start by subtracting all transforms
         theta_minus_phis = self.y_transform - numpy.sum(self.x_transforms, axis=0)
 
@@ -207,53 +189,45 @@ class ACESolver(object):
         self.y_transform = unsort_vector(sum_of_x_transformations_smooth, sorted_data_indices)
 
     def write_input_to_file(self, fname='ace_input.txt'):
-        """
-        Write y and x values used in this run to a space-delimited txt file
-        """
+        """Write y and x values used in this run to a space-delimited txt file."""
         self._write_columns(fname, self.x, self.y)
 
     def write_transforms_to_file(self, fname='ace_transforms.txt'):
-        """
-        Write y and x transforms used in this run to a space-delimited txt file
-        """
+        """Write y and x transforms used in this run to a space-delimited txt file."""
         self._write_columns(fname, self.x_transforms, self.y_transform)
 
-    def _write_columns(self, fname, xvals, yvals):
-        f = open(fname, 'w')
-        alldata = [yvals] + xvals
-        for datai in zip(*alldata):
-            yline = '{0: 15.9E} '.format(datai[0])
-            xline = ' '.join(['{0: 15.9E}'.format(xii) for xii in datai[1:]])
-            f.write(''.join([yline, xline, '\n']))
-        f.close()
+    def _write_columns(self, fname, xvals, yvals):  # pylint: disable=no-self-use
+        with open(fname, 'w') as output_file:
+            alldata = [yvals] + xvals
+            for datai in zip(*alldata):
+                yline = '{0: 15.9E} '.format(datai[0])
+                xline = ' '.join(['{0: 15.9E}'.format(xii) for xii in datai[1:]])
+                output_file.write(''.join([yline, xline, '\n']))
+
 
 def sort_vector(data, indices_of_increasing):
-    """
-    permutate 1-d data using given indices
-    """
+    """Permutate 1-d data using given indices."""
     return numpy.array([data[i] for i in indices_of_increasing])
 
+
 def unsort_vector(data, indices_of_increasing):
-    """
-    unpermutate 1-D data that is sorted by indices_of_increasing
-    """
+    """Upermutate 1-D data that is sorted by indices_of_increasing."""
     return numpy.array([data[indices_of_increasing.index(i)] for i in range(len(data))])
 
+
 def plot_transforms(ace_model, fname='ace_transforms.png'):
-    """
-    Plot the transforms
-    """
+    """Plot the transforms."""
     if not plt:
         raise ImportError('Cannot plot without the matplotlib package')
     plt.rcParams.update({'font.size': 8})
     plt.figure()
-    numCols = len(ace_model.x) / 2 + 1
+    num_cols = len(ace_model.x) / 2 + 1
     for i in range(len(ace_model.x)):
-        plt.subplot(numCols, 2, i + 1)
+        plt.subplot(num_cols, 2, i + 1)
         plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
         plt.xlabel('x{0}'.format(i))
         plt.ylabel('phi{0}'.format(i))
-    plt.subplot(numCols, 2, i + 2)
+    plt.subplot(num_cols, 2, i + 2)  # pylint: disable=undefined-loop-variable
     plt.plot(ace_model.y, ace_model.y_transform, '.', label='Theta')
     plt.xlabel('y')
     plt.ylabel('theta')
@@ -262,22 +236,20 @@ def plot_transforms(ace_model, fname='ace_transforms.png'):
     if fname:
         plt.savefig(fname)
     else:
-        plt.show()
+        return plt
 
 def plot_input(ace_model, fname='ace_input.png'):
-    """
-    Plot the transforms
-    """
+    """Plot the transforms."""
     if not plt:
         raise ImportError('Cannot plot without the matplotlib package')
     plt.rcParams.update({'font.size': 8})
     plt.figure()
-    numCols = len(ace_model.x) / 2 + 1
+    num_cols = len(ace_model.x) / 2 + 1
     for i in range(len(ace_model.x)):
-        plt.subplot(numCols, 2, i + 1)
+        plt.subplot(num_cols, 2, i + 1)
         plt.plot(ace_model.x[i], ace_model.y, '.')
         plt.xlabel('x{0}'.format(i))
-        plt.ylabel('y'.format(i))
+        plt.ylabel('y')
 
     plt.tight_layout()
 

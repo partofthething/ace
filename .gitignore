@@ -21,4 +21,4 @@ MANIFEST
 .settings*
 ace/tests/*.txt
 *.swp
-
+.tox
