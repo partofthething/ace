@@ -1,28 +1,22 @@
-'''
-Problem demonstrating supersmoother from [Friedman82]_
-'''
+"""Problem demonstrating supersmoother from [Friedman82]_."""
 
 import math
 
-import numpy
 import numpy.random
 import matplotlib.pyplot as plt
 
 from ace import smoother
 
+
 def build_sample_smoother_problem_friedman82(N=200):
-    """
-    Sample problem from supersmoother pub.
-    """
+    """Sample problem from supersmoother publication."""
     x = numpy.random.uniform(size=N)
     err = numpy.random.standard_normal(N)
     y = numpy.sin(2 * math.pi * (1 - x) ** 2) + x * err
     return x, y
 
 def run_friedman82_basic():
-    """
-    Runs Friedman's test of fixed-span smoothers from Figure 2b.
-    """
+    """Run Friedman's test of fixed-span smoothers from Figure 2b."""
     x, y = build_sample_smoother_problem_friedman82()
     plt.figure()
     # plt.plot(x, y, '.', label='Data')

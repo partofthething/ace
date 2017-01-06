@@ -1,16 +1,11 @@
-'''
-Run the Sample problem from [Wang04]_
-'''
+"""Run the Sample problem from [Wang04]_."""
 
 import numpy
 
-from .. import ace
+from ace import ace
 
 def build_sample_ace_problem_wang04(N=100):
-    """
-    Sample problem from Wang 2004
-    """
-
+    """Build sample problem from Wang 2004."""
     x = [numpy.random.uniform(-1, 1, size=N)
          for _i in range(0, 5)]
     noise = numpy.random.standard_normal(N)
@@ -19,6 +14,7 @@ def build_sample_ace_problem_wang04(N=100):
     return x, y
 
 def run_wang04():
+    """Run sample problem."""
     x, y = build_sample_ace_problem_wang04(N=200)
     ace_solver = ace.ACESolver()
     ace_solver.specify_data_set(x, y)
@@ -33,4 +29,3 @@ def run_wang04():
 
 if __name__ == '__main__':
     run_wang04()
-

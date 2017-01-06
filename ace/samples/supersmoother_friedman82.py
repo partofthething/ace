@@ -1,16 +1,12 @@
-'''
-Problem demonstrating supersmoother from [Friedman82]_
-'''
+"""Problem demonstrating supersmoother from [Friedman82]_."""
 
 import matplotlib.pyplot as plt
 
-import smoother_friedman82
-from ..supersmoother import SuperSmoother
+from ace.samples import smoother_friedman82
+from ace.supersmoother import SuperSmoother
 
 def run_friedman82_super():
-    """
-    Runs Friedman's test of fixed-span smoothers from Figure 2b.
-    """
+    """Run Friedman's test of fixed-span smoothers from Figure 2b."""
     x, y = smoother_friedman82.build_sample_smoother_problem_friedman82()
     plt.figure()
     smooth = SuperSmoother()

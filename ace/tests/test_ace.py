@@ -1,15 +1,18 @@
-'''
+"""
 Unit tests for ACE methods.
 
 These implicitly cover the SuperSmoother as well, but they don't validate it.
-'''
+"""
 
 import unittest
 
 import ace.ace
 import ace.samples.breiman85
 
+# pylint: disable=protected-access, missing-docstring
+
 class TestAce(unittest.TestCase):
+    """Tests."""
 
     def setUp(self):
         self.ace = ace.ace.ACESolver()

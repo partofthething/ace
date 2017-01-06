@@ -30,7 +30,9 @@ DEFAULT_SPANS = (TWEETER_SPAN, MID_SPAN, BASS_SPAN)
 
 class Smoother(object):  # pylint: disable=too-many-instance-attributes
     """Smoother that accepts data and produces smoother curves that fit the data."""
+
     def __init__(self):
+        """Smoother constructor."""
         self.x = []
         self.y = []
 
@@ -118,10 +120,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
         plt.close()
 
     def _store_unsorted_results(self, smooth, residual):
-        """
-        Convert sorted smooth/residual back to as-input order
-        """
-
+        """Convert sorted smooth/residual back to as-input order."""
         if self._original_index_of_xvalue:
             # data was sorted. Unsort it here.
             self.smooth_result = numpy.zeros(len(self.y))
@@ -229,13 +228,13 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         self._add_observation(x_to_add, y_to_add)
 
     def _remove_observation(self, x_to_remove, y_to_remove):
-        """Removes observation from window, updating means/variance efficiently."""
+        """Remove observation from window, updating means/variance efficiently."""
         self._remove_observation_from_variances(x_to_remove, y_to_remove)
         self._remove_observation_from_means(x_to_remove, y_to_remove)
         self.window_size -= 1
 
     def _add_observation(self, x_to_add, y_to_add):
-        """Adds observation to window, updating means/variance efficiently."""
+        """Add observation to window, updating means/variance efficiently."""
         self._add_observation_to_means(x_to_add, y_to_add)
         self._add_observation_to_variances(x_to_add, y_to_add)
         self.window_size += 1
@@ -306,9 +305,8 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         return residual
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
-    """
-    Use slow means and variances at each step. Used to validate fast updates.
-    """
+    """Use slow means and variances at each step. Used to validate fast updates."""
+
     def _advance_window(self):
         self._window_bound_lower += 1
         self._update_values_in_window()

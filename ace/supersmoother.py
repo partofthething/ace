@@ -38,7 +38,7 @@ class SuperSmoother(smoother.Smoother):
         self._primary_smooths = []
         self._residual_smooths = []
         self._best_span_at_each_point = []
-        self._smoothed_best_spans = []
+        self._smoothed_best_spans = None
         self._bass_enhancement = 0.0  # should be between 0 and 10.
 
     def set_bass_enhancement(self, alpha):
@@ -118,8 +118,10 @@ class SuperSmoother(smoother.Smoother):
 
     def _apply_best_spans_to_primaries(self):
         """
-        Given the best span, interpolate to compute the best smoothed
-        value at each observation.
+        Apply best spans.
+
+        Given the best span, interpolate to compute the best smoothed value
+        at each observation.
         """
         self.smooth_result = []
         for xi, best_span in enumerate(self._smoothed_best_spans.smooth_result):
@@ -144,6 +146,7 @@ class SuperSmoother(smoother.Smoother):
 
 class SuperSmootherWithPlots(SuperSmoother):
     """Auxiliary subclass for researching/understanding the SuperSmoother."""
+
     def _compute_primary_smooths(self):
         super(SuperSmootherWithPlots, self)._compute_primary_smooths()
         plt.figure()

@@ -1,6 +1,5 @@
-'''
-Unit tests for ace model.
-'''
+"""Unit tests for ace model."""
+
 import unittest
 import os
 
@@ -8,8 +7,9 @@ from ace import model
 from ace.samples import breiman85
 from ace.samples import wang04
 
-class TestModel(unittest.TestCase):
+# pylint: disable=protected-access, missing-docstring
 
+class TestModel(unittest.TestCase):
 
     def setUp(self):
         self.model = model.Model()

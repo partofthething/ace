@@ -43,7 +43,9 @@ def read_column_data_from_txt(fname):
 
 class Model(object):
     """A continuous model of data based on ACE regressions."""
+
     def __init__(self):
+        """Model constructor."""
         self.ace = ace.ACESolver()
         self.phi_continuous = None
         self.inverse_theta_continuous = None

@@ -2,6 +2,9 @@
 The ace Package
 ===============
 
+.. image:: https://travis-ci.org/partofthething/ace.svg?branch=develop
+    :target: https://travis-ci.org/partofthething/ace
+    
 ace is an implementation of the Alternating Conditional Expectation (ACE) algorithm [Breiman85]_,
 which can be used to find otherwise difficult-to-find relationships between predictors
 and responses and as a multivariate regression tool.

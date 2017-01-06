@@ -6,6 +6,7 @@ extension-pkg-whitelist=numpy
 # Maximum number of characters on a single line.
 max-line-length=120
 
-good-names=i,j,k,x,y,z,xi,yi,xt,xy,xj,yj,ri
-method-rgx=[a-z_][a-z0-9_]{2,40}$
+good-names=i,j,k,x,y,z,xi,yi,xt,xy,xj,yj,ri,N
+method-rgx=[a-z_][a-z0-9_]{2,50}$
+function-rgx=[a-z_][a-z0-9_]{2,50}$
 

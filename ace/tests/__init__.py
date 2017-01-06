@@ -1,3 +1,1 @@
-"""
-Unit test suite for ace
-"""
+"""Unit test suite for ace."""

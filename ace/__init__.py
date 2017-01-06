@@ -1,5 +1,5 @@
 """
-ace is a multivariate regression tool that solves alternating conditional expectations
+ace is a multivariate regression tool that solves alternating conditional expectations.
 
 See full documentation at http://partofthething.com/ace
 
@@ -28,7 +28,7 @@ def _get_version():
     try:
         _dist = get_distribution('ace')
         # Normalize case for Windows systems
-        _dist_loc = os.path.normcase(_dist.location)
+        _dist_loc = os.path.normcase(_dist.location)  # pylint: disable=no-member
         _here = os.path.normcase(__file__)
         if not _here.startswith(os.path.join(_dist_loc, 'ace')):
             # not installed, but there is another version that *is*
@@ -36,17 +36,8 @@ def _get_version():
     except DistributionNotFound:
         version = 'Please install ace with setup.py'
     else:
-        version = _dist.version
+        version = _dist.version  # pylint: disable=no-member
 
     return version
 
 __version__ = _get_version()
-
-from . import ace
-from . import model
-from . import smoother
-from . import supersmoother
-from . import samples
-from . import tests
-
-

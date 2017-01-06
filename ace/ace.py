@@ -257,4 +257,3 @@ def plot_input(ace_model, fname='ace_input.png'):
         plt.savefig(fname)
     else:
         plt.show()
-
