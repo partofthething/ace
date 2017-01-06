@@ -46,8 +46,6 @@ On Windows, use::
 
 	pip install ace
 
-or use the `GUI installer <http://partofthething.com/ace/builds/ace-0.2-1.win32.exe>`_.
-
 Directly from source::
 
 	git clone git@github.com:partofthething/ace.git
