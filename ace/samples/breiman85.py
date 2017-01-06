@@ -9,7 +9,7 @@ from ace import ace
 def build_sample_ace_problem_breiman85(N=200):
     """Sample problem from Breiman 1985."""
     x_cubed = numpy.random.standard_normal(N)
-    x = scipy.special.cbrt(x_cubed)  # pylint: disable=no-member
+    x = scipy.special.cbrt(x_cubed)
     noise = numpy.random.standard_normal(N)
     y = numpy.exp((x ** 3.0) + noise)
     return [x], y
