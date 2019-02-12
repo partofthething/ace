@@ -102,7 +102,7 @@ class SuperSmoother(smoother.Smoother):
             best_span = DEFAULT_SPANS[best_smooth_index]
             best_span_residual = self._residual_smooths[best_smooth_index][i]
             bass_span_residual = self._residual_smooths[BASS_INDEX][i]
-            if best_span_residual < bass_span_residual and best_span_residual > 0:
+            if 0 < best_span_residual < bass_span_residual:
                 ri = best_span_residual / bass_span_residual
                 bass_factor = ri ** (10.0 - self._bass_enhancement)
                 enhanced_spans.append(best_span + (bass_span - best_span) * bass_factor)

@@ -235,8 +235,8 @@ def plot_transforms(ace_model, fname='ace_transforms.png'):
 
     if fname:
         plt.savefig(fname)
-    else:
-        return plt
+        return None
+    return plt
 
 def plot_input(ace_model, fname='ace_input.png'):
     """Plot the transforms."""

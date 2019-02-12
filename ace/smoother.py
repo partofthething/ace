@@ -299,10 +299,13 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
 
         This is the absolute residual from Eq. 9. in [1]
         """
-        residual = abs((yi - smooth_here) / (1.0 - 1.0 / self.window_size -
-                                             (xi - self._mean_x_in_window) ** 2 /
-                                             self._variance_in_window))
-        return residual
+        denom = (1.0 - 1.0 / self.window_size -
+                 (xi - self._mean_x_in_window) ** 2 /
+                 self._variance_in_window)
+        if denom == 0.0:
+            # can happen  with small data sets
+            return 1.0
+        return abs((yi - smooth_here) / denom)
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
     """Use slow means and variances at each step. Used to validate fast updates."""

@@ -7,3 +7,7 @@ max-line-length=120
 good-names=i,j,k,x,y,z,xi,yi,xt,xy,xj,yj,ri,N
 method-rgx=[a-z_][a-z0-9_]{2,50}$
 function-rgx=[a-z_][a-z0-9_]{2,50}$
+
+[MESSAGES CONTROL]
+disable=
+    useless-object-inheritance,
