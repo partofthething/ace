@@ -29,6 +29,7 @@ def read_column_data_from_txt(fname):
         List of x columns
     y_values : list
         list of y values
+
     """
     datafile = open(fname)
     datarows = []
@@ -58,6 +59,7 @@ class Model(object):
         ----------
         fname : str
             The name of the file to load.
+
         """
         x_values, y_values = read_column_data_from_txt(fname)
         self.build_model_from_xy(x_values, y_values)
@@ -91,6 +93,7 @@ class Model(object):
         ----------
         x_values : iterable
             a float x-value for each independent variable, e.g. (1.5, 2.5)
+
         """
         if len(x_values) != len(self.phi_continuous):
             raise ValueError('x_values must have length equal to the number of independent variables '

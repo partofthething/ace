@@ -108,7 +108,7 @@ def validate_known_curve():
     plt.show()
 
 def finish_plot():
-    """Helper for plotting."""
+    """Help with plotting."""
     plt.legend()
     plt.grid(color='0.7')
     plt.xlabel('x')

@@ -70,6 +70,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
             list of floats that represent y(x) for each x
         sort_data : bool, optional
             If true, the data will be sorted by increasing x values.
+
         """
         if sort_data:
             xy = sorted(zip(x_input, y_input))
@@ -92,6 +93,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
         ----------
         span : float
             Fraction on data length N to be considered in smoothing
+
         """
         self._span = span
 
@@ -107,6 +109,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
         ----------
         fname : str, optional
             name of file to produce. If none, will show interactively.
+
         """
         plt.figure()
         xy = sorted(zip(self.x, self.smooth_result))
@@ -208,6 +211,7 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         --------
         _add_observation_to_variances : fast update for single observation addition
         _remove_observation_from_variances : fast update for single observation removal
+
         """
         self._covariance_in_window = sum([(xj - self._mean_x_in_window) *
                                           (yj - self._mean_y_in_window)
@@ -260,6 +264,7 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         See Also
         --------
         _update_variance_in_window : compute variance considering full window
+
         """
         term1 = (self.window_size + 1.0) / self.window_size * (xj - self._mean_x_in_window)
         self._covariance_in_window += term1 * (yj - self._mean_y_in_window)
@@ -284,6 +289,7 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         -------
         smooth_here : float
             Value of smooth s(xi)
+
         """
         if self._variance_in_window:
             beta = self._covariance_in_window / self._variance_in_window
@@ -322,7 +328,7 @@ DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother  # pylint: disable=invalid-name
 
 def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     """
-    Convenience function to run the basic smoother.
+    Run the basic smoother (convenience function).
 
     Parameters
     ----------
@@ -339,6 +345,7 @@ def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     -------
     smoother : object
         The smoother object with results stored on it.
+
     """
     if smoother_cls is None:
         smoother_cls = DEFAULT_BASIC_SMOOTHER

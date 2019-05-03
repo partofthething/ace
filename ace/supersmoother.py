@@ -32,7 +32,7 @@ class SuperSmoother(smoother.Smoother):
     """Variable-span smoother."""
 
     def __init__(self):
-        """Constructor for SuperSmoother."""
+        """Construct a SuperSmoother."""
         super(SuperSmoother, self).__init__()
 
         self._primary_smooths = []

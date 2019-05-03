@@ -57,6 +57,7 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
             list of iterables, one for each independent variable
         y_input : array
             the dependent observations
+
         """
         self.x = x_input
         self.y = y_input
@@ -80,7 +81,7 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
 
     def _compute_sorted_indices(self):
         """
-        The smoothers need sorted data. This sorts it from the perspective of each column.
+        Sort data from the perspective of each column.
 
         if self._x[0][3] is the 9th-smallest value in self._x[0], then  _xi_sorted[3] = 8
 
@@ -96,12 +97,12 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
         self._xi_sorted = sorted_indices[1:]  # list of lists (like self.x)
 
     def _outer_error_is_decreasing(self):
-        """True if outer iteration error is decreasing."""
+        """Return True if outer iteration error is decreasing."""
         is_decreasing, self._last_outer_error = self._error_is_decreasing(self._last_outer_error)
         return is_decreasing
 
     def _error_is_decreasing(self, last_error):
-        """True if current error is less than last_error."""
+        """Return True if current error is less than last_error."""
         current_error = self._compute_error()
         is_decreasing = current_error < last_error
         return is_decreasing, current_error
