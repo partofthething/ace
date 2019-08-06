@@ -15,6 +15,7 @@ from scipy.interpolate import interp1d
 
 from . import ace
 
+
 def read_column_data_from_txt(fname):
     """
     Read data from a simple text file.
@@ -82,8 +83,17 @@ class Model(object):
         """Compute 1-D interpolation functions for all the transforms so they're continuous.."""
         self.phi_continuous = []
         for xi, phii in zip(self.ace.x, self.ace.x_transforms):
-            self.phi_continuous.append(interp1d(xi, phii))
-        self.inverse_theta_continuous = interp1d(self.ace.y_transform, self.ace.y)
+            self.phi_continuous.append(
+                interp1d(
+                    x=xi,
+                    y=phii,
+                    bounds_error=False,
+                    fill_value=(min(phii), max(phii))))
+        self.inverse_theta_continuous = interp1d(
+            x=self.ace.y_transform,
+            y=self.ace.y,
+            bounds_error=False,
+            fill_value=(min(self.ace.y), max(self.ace.y)))
 
     def eval(self, x_values):
         """
@@ -96,12 +106,14 @@ class Model(object):
 
         """
         if len(x_values) != len(self.phi_continuous):
-            raise ValueError('x_values must have length equal to the number of independent variables '
-                             '({0}) rather than {1}.'.format(len(self.phi_continuous),
-                                                             len(x_values)))
+            raise ValueError(
+                'x_values must have length equal to the number of independent variables '
+                '({0}) rather than {1}.'.format(
+                    len(self.phi_continuous), len(x_values)))
 
-        sum_phi = sum([phi(xi) for phi, xi in zip(self.phi_continuous, x_values)])
-        return float(self.inverse_theta_continuous(sum_phi))
+        sum_phi = sum(
+            [phi(xi) for phi, xi in zip(self.phi_continuous, x_values)])
+        return self.inverse_theta_continuous(sum_phi)
 
 
 if __name__ == '__main__':

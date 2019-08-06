@@ -3,16 +3,18 @@ from setuptools import setup, find_packages
 with open('README.rst') as f:
     long_description = f.read()
 
-setup(name='ace',
+setup(
+    name='ace',
     version='0.3.2',
-    description='Non-parametric multivariate regressions by Alternating Conditional Expectations',
+    description=
+    'Non-parametric multivariate regressions by Alternating Conditional Expectations',
     author='Nick Touran',
     author_email='ace@partofthething.com',
     url='https://github.com/partofthething/ace',
     packages=find_packages(),
     license='MIT',
     long_description=long_description,
-    install_requires=['numpy', 'scipy'],
+    install_requires=['numpy', 'scipy>=0.17'],
     keywords='regression ace multivariate statistics',
     use_2to3=True,
     classifiers=[
@@ -26,7 +28,5 @@ setup(name='ace',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        ],
-      test_suite='tests'
-
-     )
+    ],
+    test_suite='tests')
