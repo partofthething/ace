@@ -4,7 +4,7 @@ with open('README.rst') as f:
     long_description = f.read()
 
 setup(name='ace',
-    version='0.3-2',
+    version='0.3.2',
     description='Non-parametric multivariate regressions by Alternating Conditional Expectations',
     author='Nick Touran',
     author_email='ace@partofthething.com',
