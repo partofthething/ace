@@ -1,4 +1,4 @@
-
+===============
 The ace Package
 ===============
 
@@ -12,6 +12,7 @@ and responses and as a multivariate regression tool.
 The code for this project, as well as the issue tracker, etc. is
 `hosted on GitHub <https://github.com/partofthething/ace>`_.
 The documentation is hosted at http://partofthething.com/ace.
+
 
 What is it?
 -----------
@@ -100,7 +101,21 @@ text file:
 
 Demo
 ----
-A clear demonstration of ace is available in the
+A combination of various functions with noise is shown below:
+
+.. have to use full path here to work in built docs and github-rendered README
+
+.. image:: https://partofthething.com/ace/_static/ace_input_wang04.png
+	   :alt: Plot of the input data, which is all over the place
+
+Given just those points and zero knowledge of the underlying functions, ACE comes back
+with this:
+
+.. image:: https://partofthething.com/ace/_static/ace_transforms_wang04.png
+	:alt: Plot of the output transforms, which clearly show the underlying structure
+
+
+A longer version of this demo is available in the
 `Sample ACE Problems <http://partofthething.com/ace/samples.html>`_ section.
 
 Other details

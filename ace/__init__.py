@@ -23,6 +23,13 @@ For some plotting (matplotlib required), try::
 
 """
 def _get_version():
+    """
+    Groan single sourcing versions is a huge pain.
+
+    For now we have to manually sync it between here and setup.py (for doc build)
+
+    https://packaging.python.org/guides/single-sourcing-package-version/
+    """
     from pkg_resources import get_distribution, DistributionNotFound
     import os.path
     try:
@@ -34,7 +41,7 @@ def _get_version():
             # not installed, but there is another version that *is*
             raise DistributionNotFound
     except DistributionNotFound:
-        version = 'Please install ace with setup.py'
+        version = '0.3.2'
     else:
         version = _dist.version  # pylint: disable=no-member
 
