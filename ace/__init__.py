@@ -22,6 +22,10 @@ For some plotting (matplotlib required), try::
     myace.ace.write_transforms_to_file(fname = 'mytransforms.txt')
 
 """
+
+import os.path
+from pkg_resources import get_distribution, DistributionNotFound
+
 def _get_version():
     """
     Groan single sourcing versions is a huge pain.
@@ -30,8 +34,6 @@ def _get_version():
 
     https://packaging.python.org/guides/single-sourcing-package-version/
     """
-    from pkg_resources import get_distribution, DistributionNotFound
-    import os.path
     try:
         _dist = get_distribution('ace')
         # Normalize case for Windows systems
