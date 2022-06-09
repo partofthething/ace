@@ -222,7 +222,7 @@ def plot_transforms(ace_model, fname='ace_transforms.png'):
         raise ImportError('Cannot plot without the matplotlib package')
     plt.rcParams.update({'font.size': 8})
     plt.figure()
-    num_cols = len(ace_model.x) / 2 + 1
+    num_cols = int(len(ace_model.x) / 2) + 1
     for i in range(len(ace_model.x)):
         plt.subplot(num_cols, 2, i + 1)
         plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
@@ -245,7 +245,7 @@ def plot_input(ace_model, fname='ace_input.png'):
         raise ImportError('Cannot plot without the matplotlib package')
     plt.rcParams.update({'font.size': 8})
     plt.figure()
-    num_cols = len(ace_model.x) / 2 + 1
+    num_cols = int(len(ace_model.x) / 2) + 1
     for i in range(len(ace_model.x)):
         plt.subplot(num_cols, 2, i + 1)
         plt.plot(ace_model.x[i], ace_model.y, '.')
