@@ -1,6 +1,9 @@
 History/Changelog
 =================
 
+0.3-3
+-----
+- Fix invalid integer division (#16)
 
 0.3-2
 -----
