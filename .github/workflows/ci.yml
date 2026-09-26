@@ -22,14 +22,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - name: Install
         run: |
           uv venv --python ${{ matrix.python-version }}
-          uv pip install ".[test,plot]"
+          uv pip install ".[plot]" --group test
       - name: Test
         run: .venv/bin/pytest
 

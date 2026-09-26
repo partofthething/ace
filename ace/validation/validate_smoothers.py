@@ -169,8 +169,8 @@ class SuperSmootherBreiman(smoother.Smoother):
 
 def sort_data(x, y):
     """Sort the data."""
-    xy = sorted(zip(x, y))
-    x, y = zip(*xy)
+    xy = sorted(zip(x, y, strict=True))
+    x, y = zip(*xy, strict=True)
     return x, y
 
 

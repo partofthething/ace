@@ -37,7 +37,7 @@ turns out to be a powerful difference.
 Installing it
 -------------
 ace is available in the `Python Package Index <https://pypi.python.org/pypi/ace/>`_,
-and can be installed simply with the following (Python 3.8+)::
+and can be installed simply with the following (Python 3.11+)::
 
 	pip install ace
 
@@ -59,7 +59,7 @@ Directly from source::
 You can verify that the installation completed successfully by running the automated test
 suite from the source directory::
 
-	pip install ".[test]"
+	pip install -e . --group test
 	pytest
 
 Using it

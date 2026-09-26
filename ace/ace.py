@@ -17,6 +17,8 @@ This can be used to:
 
 """
 
+from pathlib import Path
+
 import numpy
 
 try:
@@ -150,7 +152,9 @@ class ACESolver:
                 last_direction = direction
             if numpy.max(numpy.abs(coeffs - previous_coeffs)) < self.delrsq:
                 break
-        self.x_transforms = [coeff * phi for coeff, phi in zip(coeffs, self.x_transforms)]
+        self.x_transforms = [
+            coeff * phi for coeff, phi in zip(coeffs, self.x_transforms, strict=True)
+        ]
 
     def _compute_sorted_indices(self):
         """
@@ -161,7 +165,7 @@ class ACESolver:
         We only have to sort the data once.
         """
         sorted_indices = []
-        for to_sort in [self.y] + list(self.x):
+        for to_sort in [self.y, *self.x]:
             data_w_indices = [(val, i) for (i, val) in enumerate(to_sort)]
             data_w_indices.sort()
             sorted_indices.append([i for val, i in data_w_indices])
@@ -172,8 +176,7 @@ class ACESolver:
     def _compute_error(self):
         """Compute unexplained error."""
         sum_x = sum(self.x_transforms)
-        err = sum((self.y_transform - sum_x) ** 2) / len(sum_x)
-        return err
+        return sum((self.y_transform - sum_x) ** 2) / len(sum_x)
 
     def _iterate_to_update_x_transforms(self):
         """
@@ -277,9 +280,9 @@ class ACESolver:
         self._write_columns(fname, self.x_transforms, self.y_transform)
 
     def _write_columns(self, fname, xvals, yvals):
-        with open(fname, "w") as output_file:
-            alldata = [yvals] + xvals
-            for datai in zip(*alldata):
+        with Path(fname).open("w") as output_file:
+            alldata = [yvals, *xvals]
+            for datai in zip(*alldata, strict=True):
                 yline = f"{datai[0]: 15.9E} "
                 xline = " ".join([f"{xii: 15.9E}" for xii in datai[1:]])
                 output_file.write("".join([yline, xline, "\n"]))

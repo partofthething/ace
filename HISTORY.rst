@@ -11,7 +11,7 @@ History/Changelog
 - Removed deprecated ``pkg_resources`` usage for the version
 - matplotlib is now optional for the smoothers (``pip install ace[plot]``)
 - Packaging moved to ``pyproject.toml``; removed ``setup.py`` and requirements files
-- Dropped support for Python 2 and Python < 3.8
+- Require Python 3.11+; version is now defined only in ``pyproject.toml``
 - CI moved from Travis to GitHub Actions; lint and format with ruff
 - Tests no longer leave output files in the working directory
 

@@ -51,7 +51,7 @@ class TestAce(unittest.TestCase):
         self.ace.rsq = 1.0
         before = [xt.copy() for xt in self.ace.x_transforms]
         self.ace._update_x_transforms()
-        for xt_before, xt_after in zip(before, self.ace.x_transforms):
+        for xt_before, xt_after in zip(before, self.ace.x_transforms, strict=True):
             self.assertTrue((xt_before == xt_after).all())
 
     def test_update_y_transform(self):
@@ -70,7 +70,7 @@ class TestAce(unittest.TestCase):
         data = [5, 1, 4, 6]
         increasing = [1, 2, 0, 3]
         dsort = ace.ace.sort_vector(data, increasing)
-        for item1, item2 in zip(sorted(data), dsort):
+        for item1, item2 in zip(sorted(data), dsort, strict=True):
             self.assertEqual(item1, item2)
 
     def test_unsort_vector(self):
@@ -78,7 +78,7 @@ class TestAce(unittest.TestCase):
         data = [1, 4, 5, 6]
         increasing = [1, 2, 0, 3]
         dunsort = ace.ace.unsort_vector(data, increasing)
-        for item1, item2 in zip(dunsort, unsorted):
+        for item1, item2 in zip(dunsort, unsorted, strict=True):
             self.assertEqual(item1, item2)
 
 

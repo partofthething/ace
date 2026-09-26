@@ -121,8 +121,8 @@ class Smoother:
         if not plt:
             raise ImportError("Cannot plot without the matplotlib package")
         plt.figure()
-        xy = sorted(zip(self.x, self.smooth_result))
-        x, y = zip(*xy)
+        xy = sorted(zip(self.x, self.smooth_result, strict=True))
+        x, y = zip(*xy, strict=True)
         plt.plot(x, y, "-")
         plt.plot(self.x, self.y, ".")
         if fname:
@@ -138,7 +138,9 @@ class Smoother:
             self.smooth_result = numpy.zeros(len(self.y))
             self.cross_validated_residual = numpy.zeros(len(residual))
             original_x = numpy.zeros(len(self.y))
-            for i, (xval, smooth_val, residual_val) in enumerate(zip(self.x, smooth, residual)):
+            for i, (xval, smooth_val, residual_val) in enumerate(
+                zip(self.x, smooth, residual, strict=True)
+            ):
                 original_index = self._original_index_of_xvalue[i]
                 original_x[original_index] = xval
                 self.smooth_result[original_index] = smooth_val
@@ -172,7 +174,7 @@ class BasicFixedSpanSmoother(Smoother):
         self._update_values_in_window()
         self._update_mean_in_window()
         self._update_variance_in_window()
-        for i, (xi, yi) in enumerate(zip(x, y)):
+        for i, (xi, yi) in enumerate(zip(x, y, strict=True)):
             if (i - self._neighbors_on_each_side) > 0.0 and (
                 i + self._neighbors_on_each_side
             ) < len(x):
@@ -263,7 +265,7 @@ class BasicFixedSpanSmoother(Smoother):
         self._covariance_in_window = sum(
             [
                 (xj - self._mean_x_in_window) * (yj - self._mean_y_in_window)
-                for xj, yj in zip(self._x_in_window, self._y_in_window)
+                for xj, yj in zip(self._x_in_window, self._y_in_window, strict=True)
             ]
         )
 

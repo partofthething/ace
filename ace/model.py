@@ -11,6 +11,8 @@ you may want to just use the ace module manually.
 
 """
 
+from pathlib import Path
+
 from scipy.interpolate import interp1d
 
 from . import ace
@@ -32,11 +34,9 @@ def read_column_data_from_txt(fname):
         list of y values
 
     """
-    datafile = open(fname)
-    datarows = []
-    for line in datafile:
-        datarows.append([float(li) for li in line.split()])
-    datacols = list(zip(*datarows))
+    with Path(fname).open() as datafile:
+        datarows = [[float(li) for li in line.split()] for line in datafile if line.strip()]
+    datacols = list(zip(*datarows, strict=True))
     x_values = datacols[1:]
     y_values = datacols[0]
 
@@ -82,7 +82,7 @@ class Model:
     def build_interpolators(self):
         """Compute 1-D interpolation functions for all the transforms so they're continuous.."""
         self.phi_continuous = []
-        for xi, phii in zip(self.ace.x, self.ace.x_transforms):
+        for xi, phii in zip(self.ace.x, self.ace.x_transforms, strict=True):
             self.phi_continuous.append(
                 interp1d(x=xi, y=phii, bounds_error=False, fill_value=(min(phii), max(phii)))
             )
@@ -109,7 +109,7 @@ class Model:
                 f"({len(self.phi_continuous)}) rather than {len(x_values)}."
             )
 
-        sum_phi = sum([phi(xi) for phi, xi in zip(self.phi_continuous, x_values)])
+        sum_phi = sum([phi(xi) for phi, xi in zip(self.phi_continuous, x_values, strict=True)])
         return self.inverse_theta_continuous(sum_phi)
 
 

@@ -96,7 +96,7 @@ class SuperSmoother(smoother.Smoother):
 
         Stores index so we can easily grab the best residual smooth, primary smooth, etc.
         """
-        for residuals_i in zip(*self._residual_smooths):
+        for residuals_i in zip(*self._residual_smooths, strict=True):
             index_of_best_span = residuals_i.index(min(residuals_i))
             self._best_span_at_each_point.append(DEFAULT_SPANS[index_of_best_span])
 
@@ -167,7 +167,7 @@ class SuperSmootherWithPlots(SuperSmoother):
     def _smooth_the_residuals(self):
         super()._smooth_the_residuals()
         plt.figure()
-        for residual, span in zip(self._residual_smooths, smoother.DEFAULT_SPANS):
+        for residual, span in zip(self._residual_smooths, smoother.DEFAULT_SPANS, strict=True):
             plt.plot(self.x, residual, label=f"{span}")
         plt.legend(loc="upper left")
         plt.savefig("residual_smooths.png")
