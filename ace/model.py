@@ -11,9 +11,10 @@ you may want to just use the ace module manually.
 
 """
 
+import functools
 from pathlib import Path
 
-from scipy.interpolate import interp1d
+import numpy
 
 from . import ace
 
@@ -41,6 +42,31 @@ def read_column_data_from_txt(fname):
     y_values = datacols[0]
 
     return x_values, y_values
+
+
+def linear_interpolator(x_values, y_values):
+    """
+    Build a piecewise-linear function through scattered (x, y) points.
+
+    Beyond the range of the data, the function holds the y value of the nearest end point.
+
+    Parameters
+    ----------
+    x_values : iterable
+        abscissas, in any order
+    y_values : iterable
+        ordinates corresponding to each x value
+
+    Returns
+    -------
+    function
+        Callable that evaluates the interpolation at a float or array of x values
+
+    """
+    order = numpy.argsort(x_values, kind="stable")
+    x_sorted = numpy.asarray(x_values, dtype=float)[order]
+    y_sorted = numpy.asarray(y_values, dtype=float)[order]
+    return functools.partial(numpy.interp, xp=x_sorted, fp=y_sorted)
 
 
 class Model:
@@ -80,18 +106,12 @@ class Model:
         self.ace.solve()
 
     def build_interpolators(self):
-        """Compute 1-D interpolation functions for all the transforms so they're continuous.."""
-        self.phi_continuous = []
-        for xi, phii in zip(self.ace.x, self.ace.x_transforms, strict=True):
-            self.phi_continuous.append(
-                interp1d(x=xi, y=phii, bounds_error=False, fill_value=(min(phii), max(phii)))
-            )
-        self.inverse_theta_continuous = interp1d(
-            x=self.ace.y_transform,
-            y=self.ace.y,
-            bounds_error=False,
-            fill_value=(min(self.ace.y), max(self.ace.y)),
-        )
+        """Compute 1-D interpolation functions for all the transforms so they're continuous."""
+        self.phi_continuous = [
+            linear_interpolator(xi, phii)
+            for xi, phii in zip(self.ace.x, self.ace.x_transforms, strict=True)
+        ]
+        self.inverse_theta_continuous = linear_interpolator(self.ace.y_transform, self.ace.y)
 
     def eval(self, x_values):
         """

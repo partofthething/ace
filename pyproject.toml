@@ -13,7 +13,6 @@ authors = [{ name = "Nick Touran", email = "ace@partofthething.com" }]
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.23.2",
-    "scipy>=1.9.2",
 ]
 keywords = ["regression", "ace", "multivariate", "statistics"]
 classifiers = [

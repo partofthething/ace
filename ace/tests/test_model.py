@@ -50,6 +50,14 @@ class TestModel(unittest.TestCase):
         model2.ace.write_transforms_to_file(transforms_fname)
         self.assertGreater(transforms_fname.stat().st_size, 0)
 
+    def test_linear_interpolator(self):
+        """Unsorted input is handled and end values are held beyond the data."""
+        interp = model.linear_interpolator([3.0, 1.0, 2.0], [30.0, 10.0, 25.0])
+        self.assertAlmostEqual(interp(1.5), 17.5)
+        self.assertAlmostEqual(interp(2.5), 27.5)
+        self.assertAlmostEqual(interp(0.0), 10.0)
+        self.assertAlmostEqual(interp(9.0), 30.0)
+
     def test_smaller_dataset(self):
         x, y = wang04.build_sample_ace_problem_wang04(N=50)
         self.model.build_model_from_xy(x, y)

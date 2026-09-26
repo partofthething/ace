@@ -14,6 +14,8 @@ History/Changelog
 - Require Python 3.11+; version is now defined only in ``pyproject.toml``
 - CI moved from Travis to GitHub Actions; lint and format with ruff
 - Tests no longer leave output files in the working directory
+- ``Model`` interpolates with ``numpy.interp``, holding end values beyond the trained range
+  (previously the min/max of each transform); scipy is no longer a dependency
 
 0.3-3
 -----
