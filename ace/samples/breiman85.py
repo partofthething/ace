@@ -15,12 +15,11 @@ def build_sample_ace_problem_breiman85(N=200):
     return [x], y
 
 
-def build_sample_ace_problem_breiman2(N=500):
-    """Build sample problem y(x) = exp(sin(x))."""
-    x = numpy.linspace(0, 1, N)
-    # x = numpy.random.uniform(0, 1, size=N)
+def build_sample_ace_problem_breiman2(N=200):
+    """Build sample problem y = exp(sin(2 pi x) + noise/2) from Breiman 1985."""
+    x = numpy.random.uniform(0, 1, size=N)
     noise = numpy.random.standard_normal(N)
-    y = numpy.exp(numpy.sin(2 * numpy.pi * x)) + 0.0 * noise
+    y = numpy.exp(numpy.sin(2 * numpy.pi * x) + noise / 2.0)
     return [x], y
 
 
@@ -38,25 +37,27 @@ def run_breiman85():
 
 def run_breiman2():
     """Run Breiman's other sample problem."""
-    x, y = build_sample_ace_problem_breiman2(500)
+    x, y = build_sample_ace_problem_breiman2(200)
     ace_solver = ace.ACESolver()
     ace_solver.specify_data_set(x, y)
     ace_solver.solve()
     try:
         plt = ace.plot_transforms(ace_solver, None)
     except ImportError:
-        pass
+        return ace_solver
 
+    # log(y) and sin(2 pi x) are close to optimal. Scale them like theta for comparison.
+    log_y = numpy.log(y)
+    offset, scale = numpy.mean(log_y), numpy.std(log_y)
+    x_sorted = numpy.sort(x[0])
     plt.subplot(1, 2, 1)
-    phi = numpy.sin(2.0 * numpy.pi * x[0])
-    plt.plot(x[0], phi, label='analytic')
+    plt.plot(x_sorted, numpy.sin(2.0 * numpy.pi * x_sorted) / scale, label='analytic')
     plt.legend()
     plt.subplot(1, 2, 2)
-    y = numpy.exp(phi)
-    plt.plot(y, phi, label='analytic')
+    y_sorted = numpy.sort(y)
+    plt.plot(y_sorted, (numpy.log(y_sorted) - offset) / scale, label='analytic')
     plt.legend(loc='lower right')
-    # plt.show()
-    plt.savefig('no_noise_linear_x.png')
+    plt.savefig('sample_ace_breiman85_2.png')
 
     return ace_solver
 

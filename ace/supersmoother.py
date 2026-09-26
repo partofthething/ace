@@ -26,6 +26,8 @@ from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN, TWEETER_SPAN
 
 
 BASS_INDEX = DEFAULT_SPANS.index(BASS_SPAN)
+# floor on the residual ratio in bass enhancement to avoid underflow (sml in supsmu.f)
+MIN_BASS_RATIO = 1.0e-7
 
 
 class SuperSmoother(smoother.Smoother):
@@ -52,6 +54,12 @@ class SuperSmoother(smoother.Smoother):
 
     def compute(self):
         """Run the SuperSmoother."""
+        if not self.x[-1] > self.x[0]:
+            # all x values are the same so the best we can do is the mean.
+            self.smooth_result = numpy.full(len(self.y), numpy.mean(self.y))
+            self._store_unsorted_results(self.smooth_result,
+                                         numpy.zeros(len(self.smooth_result)))
+            return
         self._compute_primary_smooths()
         self._smooth_the_residuals()
         self._select_best_smooth_at_each_point()
@@ -92,8 +100,8 @@ class SuperSmoother(smoother.Smoother):
 
     def _enhance_bass(self):
         """Update best span choices with bass enhancement as requested by user (Eq. 11)."""
-        if not self._bass_enhancement:
-            # like in supsmu, skip if alpha=0
+        if not 0.0 < self._bass_enhancement <= 10.0:
+            # like in supsmu, skip if alpha is out of range
             return
         bass_span = DEFAULT_SPANS[BASS_INDEX]
         enhanced_spans = []
@@ -103,7 +111,7 @@ class SuperSmoother(smoother.Smoother):
             best_span_residual = self._residual_smooths[best_smooth_index][i]
             bass_span_residual = self._residual_smooths[BASS_INDEX][i]
             if 0 < best_span_residual < bass_span_residual:
-                ri = best_span_residual / bass_span_residual
+                ri = max(MIN_BASS_RATIO, best_span_residual / bass_span_residual)
                 bass_factor = ri ** (10.0 - self._bass_enhancement)
                 enhanced_spans.append(best_span + (bass_span - best_span) * bass_factor)
             else:

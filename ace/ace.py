@@ -27,16 +27,37 @@ from .supersmoother import SuperSmoother
 from .smoother import perform_smooth
 
 
-MAX_OUTERS = 200
+# Iteration controls. These defaults match Friedman's mace.f
+DEFAULT_DELRSQ = 0.01
+DEFAULT_MAXIT = 20
+DEFAULT_NTERM = 3
 
 
 class ACESolver(object):  # pylint: disable=too-many-instance-attributes
-    """The Alternating Conditional Expectation algorithm to perform regressions."""
+    """
+    The Alternating Conditional Expectation algorithm to perform regressions.
 
-    def __init__(self):
+    The iteration control follows Friedman's mace.f rather than the simpler
+    description in [Breiman85]_.
+
+    Parameters
+    ----------
+    delrsq : float, optional
+        Termination threshold. Iteration stops when R^2 changes by less than this
+        over ``nterm`` consecutive outer iterations.
+    maxit : int, optional
+        Maximum number of inner and of outer iterations.
+    nterm : int, optional
+        Number of consecutive outer iterations considered for convergence.
+
+    """
+
+    def __init__(self, delrsq=DEFAULT_DELRSQ, maxit=DEFAULT_MAXIT, nterm=DEFAULT_NTERM):
         """Solver constructor."""
-        self._last_inner_error = float('inf')
-        self._last_outer_error = float('inf')
+        self.delrsq = delrsq
+        self.maxit = maxit
+        self.nterm = nterm
+        self.rsq = 0.0
         self.x = []
         self.y = None
         self._xi_sorted = None
@@ -65,19 +86,67 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
     def solve(self):
         """Run the ACE calculational loop."""
         self._initialize()
-        while self._outer_error_is_decreasing() and self._outer_iters < MAX_OUTERS:
-            print('* Starting outer iteration {0:03d}. Current err = {1:12.5E}'
-                  ''.format(self._outer_iters, self._last_outer_error))
+        # like mace.f, seed the history with huge values so at least nterm iterations run
+        rsq_history = [100.0] * self.nterm
+        self._outer_iters = 0
+        while True:
+            print('* Starting outer iteration {0:03d}. Current R^2 = {1:12.5E}'
+                  ''.format(self._outer_iters, self.rsq))
             self._iterate_to_update_x_transforms()
             self._update_y_transform()
+            self.rsq = 1.0 - self._compute_error()
+            rsq_history[self._outer_iters % self.nterm] = self.rsq
             self._outer_iters += 1
+            if (max(rsq_history) - min(rsq_history) <= self.delrsq or
+                    self._outer_iters >= self.maxit):
+                break
 
     def _initialize(self):
-        """Set up and normalize initial data once input data is specified."""
-        self.y_transform = self.y - numpy.mean(self.y)
+        """
+        Set up and normalize initial data once input data is specified.
+
+        Like mace.f, theta starts as standardized y and each phi starts as its
+        centered x, linearly scaled to best fit theta.
+        """
+        self.y_transform = numpy.array(self.y, dtype=float)
+        self.y_transform -= numpy.mean(self.y_transform)
         self.y_transform /= numpy.std(self.y_transform)
-        self.x_transforms = [numpy.zeros(len(self.y)) for _xi in self.x]
+        self.x_transforms = [numpy.array(xi, dtype=float) - numpy.mean(xi) for xi in self.x]
+        self._scale_x_transforms()
+        self.rsq = 0.0
         self._compute_sorted_indices()
+
+    def _scale_x_transforms(self):
+        """
+        Scale the initial x transforms by a linear least-squares fit to theta.
+
+        Port of the ``scale`` subroutine in mace.f, which uses a few conjugate
+        gradient passes to find coefficients c minimizing E[(theta - sum c_i phi_i)^2].
+        """
+        phis = numpy.array(self.x_transforms).T
+        num_obs, num_vars = phis.shape
+        coeffs = numpy.zeros(num_vars)
+        last_direction = numpy.zeros(num_vars)
+        last_gradient_sq = 1.0
+        for _pass in range(num_vars):
+            previous_coeffs = coeffs.copy()
+            for step in range(num_vars):
+                residual = self.y_transform - phis.dot(coeffs)
+                gradient = -2.0 * residual.dot(phis) / num_obs
+                gradient_sq = gradient.dot(gradient)
+                if gradient_sq <= 0.0:
+                    break
+                if step == 0:
+                    direction = -gradient
+                else:
+                    direction = -gradient + gradient_sq / last_gradient_sq * last_direction
+                last_gradient_sq = gradient_sq
+                projected = phis.dot(direction)
+                coeffs += projected.dot(residual) / projected.dot(projected) * direction
+                last_direction = direction
+            if numpy.max(numpy.abs(coeffs - previous_coeffs)) < self.delrsq:
+                break
+        self.x_transforms = [coeff * phi for coeff, phi in zip(coeffs, self.x_transforms)]
 
     def _compute_sorted_indices(self):
         """
@@ -88,24 +157,13 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
         We only have to sort the data once.
         """
         sorted_indices = []
-        for to_sort in [self.y] + self.x:
+        for to_sort in [self.y] + list(self.x):
             data_w_indices = [(val, i) for (i, val) in enumerate(to_sort)]
             data_w_indices.sort()
             sorted_indices.append([i for val, i in data_w_indices])
         # save in meaningful variable names
         self._yi_sorted = sorted_indices[0]  # list (like self.y)
         self._xi_sorted = sorted_indices[1:]  # list of lists (like self.x)
-
-    def _outer_error_is_decreasing(self):
-        """Return True if outer iteration error is decreasing."""
-        is_decreasing, self._last_outer_error = self._error_is_decreasing(self._last_outer_error)
-        return is_decreasing
-
-    def _error_is_decreasing(self, last_error):
-        """Return True if current error is less than last_error."""
-        current_error = self._compute_error()
-        is_decreasing = current_error < last_error
-        return is_decreasing, current_error
 
     def _compute_error(self):
         """Compute unexplained error."""
@@ -114,18 +172,22 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
         return err
 
     def _iterate_to_update_x_transforms(self):
-        """Perform the inner iteration."""
+        """
+        Perform the inner iteration.
+
+        Stops when R^2 improves by no more than delrsq, after maxit passes, or after
+        a single pass when there's only one independent variable (like mace.f).
+        """
         self._inner_iters = 0
-        self._last_inner_error = float('inf')
-        while self._inner_error_is_decreasing():
-            print('  Starting inner iteration {0:03d}. Current err = {1:12.5E}'
-                  ''.format(self._inner_iters, self._last_inner_error))
+        while True:
+            print('  Starting inner iteration {0:03d}. Current R^2 = {1:12.5E}'
+                  ''.format(self._inner_iters, self.rsq))
+            rsq_before = self.rsq
             self._update_x_transforms()
             self._inner_iters += 1
-
-    def _inner_error_is_decreasing(self):
-        is_decreasing, self._last_inner_error = self._error_is_decreasing(self._last_inner_error)
-        return is_decreasing
+            if (len(self.x) == 1 or self.rsq - rsq_before <= self.delrsq or
+                    self._inner_iters >= self.maxit):
+                break
 
     def _update_x_transforms(self):
         """
@@ -135,6 +197,8 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
 
         This is the first of the eponymous conditional expectations. The conditional
         expectations are computed using the SuperSmoother.
+
+        Like mace.f, each new phik is only accepted if it improves R^2.
         """
         # start by subtracting all transforms
         theta_minus_phis = self.y_transform - numpy.sum(self.x_transforms, axis=0)
@@ -151,8 +215,13 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
             to_smooth = theta_minus_phis_sorted + xtransform_sorted
 
             smoother = perform_smooth(xk_sorted, to_smooth, smoother_cls=self._smoother_cls)
-            updated_x_transform_smooth = smoother.smooth_result
+            updated_x_transform_smooth = numpy.array(smoother.smooth_result)
             updated_x_transform_smooth -= numpy.mean(updated_x_transform_smooth)
+
+            rsq = 1.0 - numpy.mean((to_smooth - updated_x_transform_smooth) ** 2)
+            if rsq <= self.rsq:
+                continue
+            self.rsq = rsq
 
             # store updated transform in the order of the original data
             unsorted_xt = unsort_vector(updated_x_transform_smooth, sorted_data_indices)

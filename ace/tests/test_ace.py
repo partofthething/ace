@@ -32,24 +32,40 @@ class TestAce(unittest.TestCase):
             self.assertGreater(xhere, xprevious)
             xprevious = xhere
 
-    def test_error_is_decreasing(self):
-        err = self.ace._compute_error()
-        self.assertFalse(self.ace._error_is_decreasing(err)[0])
-
     def test_compute_error(self):
         err = self.ace._compute_error()
         self.assertNotAlmostEqual(err, 0.0)
 
+    def test_initial_x_transforms_are_scaled_linear_fit(self):
+        """Initial phi should be the least-squares linear fit of theta on x (like mace.f)."""
+        x_centered = self.ace.x[0] - self.ace.x[0].mean()
+        coeff = x_centered.dot(self.ace.y_transform) / x_centered.dot(x_centered)
+        self.assertLess(max(abs(self.ace.x_transforms[0] - coeff * x_centered)), 1e-6)
+
     def test_update_x_transforms(self):
         err = self.ace._compute_error()
         self.ace._update_x_transforms()
-        self.assertTrue(self.ace._error_is_decreasing(err)[0])
+        self.assertLess(self.ace._compute_error(), err)
+
+    def test_update_x_transforms_rejects_worse(self):
+        """A new phi that doesn't improve R^2 should be rejected."""
+        self.ace.rsq = 1.0
+        before = [xt.copy() for xt in self.ace.x_transforms]
+        self.ace._update_x_transforms()
+        for xt_before, xt_after in zip(before, self.ace.x_transforms):
+            self.assertTrue((xt_before == xt_after).all())
 
     def test_update_y_transform(self):
-        err = self.ace._compute_error()
         self.ace._update_x_transforms()
+        err = self.ace._compute_error()
         self.ace._update_y_transform()
-        self.assertTrue(self.ace._error_is_decreasing(err)[0])
+        self.assertLess(self.ace._compute_error(), err)
+
+    def test_solve_respects_maxit(self):
+        self.ace.maxit = 2
+        self.ace.delrsq = -1.0  # never converge
+        self.ace.solve()
+        self.assertEqual(self.ace._outer_iters, 2)
 
     def test_sort_vector(self):
         data = [5, 1, 4, 6]

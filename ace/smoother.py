@@ -28,6 +28,9 @@ BASS_SPAN = 0.5
 
 DEFAULT_SPANS = (TWEETER_SPAN, MID_SPAN, BASS_SPAN)
 
+# Used to numerically stabilize slope calculations for running linear fits (eps in supsmu.f)
+VARIANCE_EPS = 1.0e-3
+
 class Smoother(object):  # pylint: disable=too-many-instance-attributes
     """Smoother that accepts data and produces smoother curves that fit the data."""
 
@@ -50,6 +53,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
         self._x_in_window = []
         self._y_in_window = []
         self._neighbors_on_each_side = None
+        self._variance_threshold = 0.0
 
     def add_data_point_xy(self, x, y):
         """Add a new data point to the data set to be smoothed."""
@@ -73,12 +77,11 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
 
         """
         if sort_data:
-            xy = sorted(zip(x_input, y_input))
-            x, y = zip(*xy)
-            x_input_list = list(x_input)
-            self._original_index_of_xvalue = [x_input_list.index(xi) for xi in x]
-            if len(set(self._original_index_of_xvalue)) != len(x):
-                raise RuntimeError('There are some non-unique x-values')
+            # stable sort so tied x-values keep a well-defined order
+            self._original_index_of_xvalue = [int(i) for i in
+                                              numpy.argsort(x_input, kind='stable')]
+            x = [x_input[i] for i in self._original_index_of_xvalue]
+            y = [y_input[i] for i in self._original_index_of_xvalue]
         else:
             x, y = x_input, y_input
 
@@ -134,7 +137,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
                 original_x[original_index] = xval
                 self.smooth_result[original_index] = smooth_val
                 self.cross_validated_residual[original_index] = residual_val
-                self.x = original_x
+            self.x = original_x
         else:
             # no sorting was done. just apply results
             self.smooth_result = smooth
@@ -154,6 +157,7 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
     def compute(self):
         """Perform the smoothing operations."""
         self._compute_window_size()
+        self._compute_variance_threshold()
         smooth = []
         residual = []
 
@@ -169,18 +173,55 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
                 self._advance_window()
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
+            if residual_here is None:
+                # leverage too high for a meaningful residual. Reuse the previous one like supsmu.f
+                residual_here = residual[-1] if residual else 0.0
             smooth.append(smooth_here)
             residual.append(residual_here)
 
+        smooth = self._average_smooth_over_ties(smooth)
         self._store_unsorted_results(smooth, residual)
 
     def _compute_window_size(self):
-        """Determine characteristics of symmetric neighborhood with J/2 values on each side."""
-        self._neighbors_on_each_side = int(len(self.x) * self._span) // 2
-        self.window_size = self._neighbors_on_each_side * 2 + 1
-        if self.window_size <= 1:
-            # cannot do averaging with 1 point in window. Force >=2
-            self.window_size = 2
+        """
+        Determine characteristics of symmetric neighborhood with J/2 values on each side.
+
+        Rounds and enforces a minimum of 2 neighbors on each side, like supsmu.f.
+        """
+        self._neighbors_on_each_side = max(int(0.5 * self._span * len(self.x) + 0.5), 2)
+        self.window_size = min(self._neighbors_on_each_side * 2 + 1, len(self.x))
+
+    def _compute_variance_threshold(self):
+        """
+        Determine the window variance below which the local slope is taken to be zero.
+
+        This is ``vsmlsq`` in supsmu.f, based on the interquartile spread of x.
+        """
+        num_x = len(self.x)
+        lower = max(num_x // 4, 1)
+        upper = 3 * lower
+        scale = self.x[upper - 1] - self.x[lower - 1]
+        while scale <= 0.0 and (upper < num_x or lower > 1):
+            if upper < num_x:
+                upper += 1
+            if lower > 1:
+                lower -= 1
+            scale = self.x[upper - 1] - self.x[lower - 1]
+        self._variance_threshold = (VARIANCE_EPS * scale) ** 2
+
+    def _average_smooth_over_ties(self, smooth):
+        """Give all observations with tied x-values the average of their smooth values."""
+        smooth = list(smooth)
+        start = 0
+        while start < len(smooth):
+            end = start
+            while end + 1 < len(smooth) and self.x[end + 1] <= self.x[end]:
+                end += 1
+            if end > start:
+                tied_mean = sum(smooth[start:end + 1]) / (end + 1 - start)
+                smooth[start:end + 1] = [tied_mean] * (end + 1 - start)
+            start = end + 1
+        return smooth
 
     def _update_values_in_window(self):
         """Update which values are in the current window."""
@@ -291,26 +332,24 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
             Value of smooth s(xi)
 
         """
-        if self._variance_in_window:
+        beta = 0.0
+        if self._variance_in_window > self._variance_threshold:
             beta = self._covariance_in_window / self._variance_in_window
-            alpha = self._mean_y_in_window - beta * self._mean_x_in_window
-            value_of_smooth_here = beta * (xi) + alpha
-        else:
-            value_of_smooth_here = 0.0
-        return value_of_smooth_here
+        return beta * (xi - self._mean_x_in_window) + self._mean_y_in_window
 
     def _compute_cross_validated_residual_here(self, xi, yi, smooth_here):
         """
         Compute cross validated residual.
 
-        This is the absolute residual from Eq. 9. in [1]
+        This is the absolute residual from Eq. 9. in [1]. Returns None when the
+        leverage of this point is 1 or more (can happen with small data sets).
         """
-        denom = (1.0 - 1.0 / self.window_size -
-                 (xi - self._mean_x_in_window) ** 2 /
-                 self._variance_in_window)
-        if denom == 0.0:
-            # can happen  with small data sets
-            return 1.0
+        leverage = 1.0 / self.window_size
+        if self._variance_in_window > self._variance_threshold:
+            leverage += (xi - self._mean_x_in_window) ** 2 / self._variance_in_window
+        denom = 1.0 - leverage
+        if denom <= 0.0:
+            return None
         return abs((yi - smooth_here) / denom)
 
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
