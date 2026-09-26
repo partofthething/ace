@@ -1,6 +1,7 @@
 """Unit tests for ace model."""
 
 import os
+import tempfile
 import unittest
 
 from ace import model
@@ -10,9 +11,11 @@ from ace.samples import breiman85, wang04
 class TestModel(unittest.TestCase):
     def setUp(self):
         self.model = model.Model()
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir = self._tmpdir.name
 
     def tearDown(self):
-        pass
+        self._tmpdir.cleanup()
 
     def test_build_model_from_xy(self):
         x, y = breiman85.build_sample_ace_problem_breiman85()
@@ -33,7 +36,7 @@ class TestModel(unittest.TestCase):
     def test_read_column_data_from_txt(self):
         x, y = breiman85.build_sample_ace_problem_breiman85()
         self.model.build_model_from_xy(x, y)
-        fname = os.path.join(os.path.dirname(__file__), "sample_xy_input.txt")
+        fname = os.path.join(self.tmpdir, "sample_xy_input.txt")
         self.model.ace.write_input_to_file(fname)
 
         model2 = model.Model()
@@ -43,7 +46,9 @@ class TestModel(unittest.TestCase):
         val2 = model2.eval([0.5])
         self.assertAlmostEqual(val, val2, 2)
 
-        model2.ace.write_transforms_to_file()
+        transforms_fname = os.path.join(self.tmpdir, "ace_transforms.txt")
+        model2.ace.write_transforms_to_file(transforms_fname)
+        self.assertTrue(os.path.getsize(transforms_fname) > 0)
 
     def test_smaller_dataset(self):
         x, y = wang04.build_sample_ace_problem_wang04(N=50)

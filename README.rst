@@ -2,8 +2,8 @@
 The ace Package
 ===============
 
-.. image:: https://travis-ci.org/partofthething/ace.svg?branch=develop
-    :target: https://travis-ci.org/partofthething/ace
+.. image:: https://github.com/partofthething/ace/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/partofthething/ace/actions/workflows/ci.yml
     
 ace is an implementation of the Alternating Conditional Expectation (ACE) algorithm [Breiman85]_,
 which can be used to find otherwise difficult-to-find relationships between predictors
