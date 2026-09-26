@@ -1,16 +1,13 @@
 """Unit tests for ace model."""
 
-import unittest
 import os
+import unittest
 
 from ace import model
-from ace.samples import breiman85
-from ace.samples import wang04
+from ace.samples import breiman85, wang04
 
-# pylint: disable=protected-access, missing-docstring
 
 class TestModel(unittest.TestCase):
-
     def setUp(self):
         self.model = model.Model()
 
@@ -36,7 +33,7 @@ class TestModel(unittest.TestCase):
     def test_read_column_data_from_txt(self):
         x, y = breiman85.build_sample_ace_problem_breiman85()
         self.model.build_model_from_xy(x, y)
-        fname = os.path.join(os.path.dirname(__file__), 'sample_xy_input.txt')
+        fname = os.path.join(os.path.dirname(__file__), "sample_xy_input.txt")
         self.model.ace.write_input_to_file(fname)
 
         model2 = model.Model()

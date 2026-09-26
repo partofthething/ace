@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # ace documentation build configuration file, created by
 # sphinx-quickstart on Sat Nov  1 14:21:00 2014.
@@ -12,16 +11,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
-
-import sphinx_rtd_theme
-
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(".."))
 
 # -- General configuration ------------------------------------------------
 
@@ -32,28 +28,28 @@ sys.path.insert(0, os.path.abspath('..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'numpydoc',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "numpydoc",
     "sphinx_rtd_theme",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'ace'
-copyright = u'2014-2020, Nick Touran'
+project = "ace"
+copyright = "2014-2020, Nick Touran"
 
 
 # The version info for the project you're documenting, acts as replacement for
@@ -62,6 +58,7 @@ copyright = u'2014-2020, Nick Touran'
 #
 # The short X.Y version.
 import ace
+
 version = ace.__version__
 # The full version, including alpha/beta/rc tags.
 release = ace.__version__
@@ -78,7 +75,7 @@ release = ace.__version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ["_build"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -96,7 +93,7 @@ exclude_patterns = ['_build']
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -116,10 +113,10 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 # html_theme_options = {}
 html_theme_options = {
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
 }
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -143,7 +140,7 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -192,28 +189,25 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'acedoc'
+htmlhelp_basename = "acedoc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-# 'papersize': 'letterpaper',
-
-# The font size ('10pt', '11pt' or '12pt').
-# 'pointsize': '10pt',
-
-# Additional stuff for the LaTeX preamble.
-# 'preamble': '',
+    # The paper size ('letterpaper' or 'a4paper').
+    # 'papersize': 'letterpaper',
+    # The font size ('10pt', '11pt' or '12pt').
+    # 'pointsize': '10pt',
+    # Additional stuff for the LaTeX preamble.
+    # 'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'ace.tex', u'ace Documentation',
-   u'Nick Touran', 'manual'),
+    ("index", "ace.tex", "ace Documentation", "Nick Touran", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -241,10 +235,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'ace', u'ace Documentation',
-     [u'Nick Touran'], 1)
-]
+man_pages = [("index", "ace", "ace Documentation", ["Nick Touran"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -256,9 +247,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'ace', u'ace Documentation',
-   u'Nick Touran', 'ace', 'Alternating Conditional Expectation solver',
-   'Miscellaneous'),
+    (
+        "index",
+        "ace",
+        "ace Documentation",
+        "Nick Touran",
+        "ace",
+        "Alternating Conditional Expectation solver",
+        "Miscellaneous",
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -272,4 +269,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
-

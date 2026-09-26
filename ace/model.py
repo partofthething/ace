@@ -43,7 +43,7 @@ def read_column_data_from_txt(fname):
     return x_values, y_values
 
 
-class Model(object):
+class Model:
     """A continuous model of data based on ACE regressions."""
 
     def __init__(self):
@@ -84,16 +84,14 @@ class Model(object):
         self.phi_continuous = []
         for xi, phii in zip(self.ace.x, self.ace.x_transforms):
             self.phi_continuous.append(
-                interp1d(
-                    x=xi,
-                    y=phii,
-                    bounds_error=False,
-                    fill_value=(min(phii), max(phii))))
+                interp1d(x=xi, y=phii, bounds_error=False, fill_value=(min(phii), max(phii)))
+            )
         self.inverse_theta_continuous = interp1d(
             x=self.ace.y_transform,
             y=self.ace.y,
             bounds_error=False,
-            fill_value=(min(self.ace.y), max(self.ace.y)))
+            fill_value=(min(self.ace.y), max(self.ace.y)),
+        )
 
     def eval(self, x_values):
         """
@@ -107,14 +105,13 @@ class Model(object):
         """
         if len(x_values) != len(self.phi_continuous):
             raise ValueError(
-                'x_values must have length equal to the number of independent variables '
-                '({0}) rather than {1}.'.format(
-                    len(self.phi_continuous), len(x_values)))
+                "x_values must have length equal to the number of independent variables "
+                f"({len(self.phi_continuous)}) rather than {len(x_values)}."
+            )
 
-        sum_phi = sum(
-            [phi(xi) for phi, xi in zip(self.phi_continuous, x_values)])
+        sum_phi = sum([phi(xi) for phi, xi in zip(self.phi_continuous, x_values)])
         return self.inverse_theta_continuous(sum_phi)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

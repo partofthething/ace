@@ -5,7 +5,7 @@ This intentionally mirrors the FORTRAN control flow rather than being idiomatic 
 it can serve as an independent reference for the main implementation. Only unit
 weights, non-periodic variables (iper=1), and orderable variables (l=1) are supported.
 """
-# pylint: skip-file
+
 import numpy as np
 
 SPANS = (0.05, 0.2, 0.5)
@@ -73,7 +73,7 @@ def smooth(x, y, span, iper, vsmlsq):
             sy += smo[j]
             cnt += 1
         if j > j0:
-            smo[j0:j + 1] = sy / cnt
+            smo[j0 : j + 1] = sy / cnt
         j += 1
     return smo, acvr
 
@@ -168,10 +168,10 @@ def mace(xs, y, delrsq=0.01, maxit=20, nterm=3):
     X = np.column_stack([np.asarray(xi, float) for xi in xs])
     n, p = X.shape
     ty = y - y.mean()
-    ty /= np.sqrt(np.mean(ty ** 2))
+    ty /= np.sqrt(np.mean(ty**2))
     tx = X - X.mean(axis=0)
-    my = np.argsort(y, kind='stable')
-    mx = [np.argsort(X[:, i], kind='stable') for i in range(p)]
+    my = np.argsort(y, kind="stable")
+    mx = [np.argsort(X[:, i], kind="stable") for i in range(p)]
     tx = scale(ty, tx, delrsq, p)
     rsq = 0.0
     it = 0
@@ -200,7 +200,7 @@ def mace(xs, y, delrsq=0.01, maxit=20, nterm=3):
         z1 = tx[my].sum(axis=1)
         z3 = supsmu(y[my], z1)
         z3 -= z3.mean()
-        z3 /= np.sqrt(np.mean(z3 ** 2))
+        z3 /= np.sqrt(np.mean(z3**2))
         ty = np.empty(n)
         ty[my] = z3
         rsq = 1.0 - np.mean((ty - tx.sum(axis=1)) ** 2)

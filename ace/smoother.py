@@ -20,6 +20,7 @@ Example::
 """
 
 import numpy
+
 try:
     from matplotlib import pyplot as plt
 except ImportError:
@@ -34,7 +35,8 @@ DEFAULT_SPANS = (TWEETER_SPAN, MID_SPAN, BASS_SPAN)
 # Used to numerically stabilize slope calculations for running linear fits (eps in supsmu.f)
 VARIANCE_EPS = 1.0e-3
 
-class Smoother(object):  # pylint: disable=too-many-instance-attributes
+
+class Smoother:
     """Smoother that accepts data and produces smoother curves that fit the data."""
 
     def __init__(self):
@@ -81,8 +83,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
         """
         if sort_data:
             # stable sort so tied x-values keep a well-defined order
-            self._original_index_of_xvalue = [int(i) for i in
-                                              numpy.argsort(x_input, kind='stable')]
+            self._original_index_of_xvalue = [int(i) for i in numpy.argsort(x_input, kind="stable")]
             x = [x_input[i] for i in self._original_index_of_xvalue]
             y = [y_input[i] for i in self._original_index_of_xvalue]
         else:
@@ -118,12 +119,12 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
 
         """
         if not plt:
-            raise ImportError('Cannot plot without the matplotlib package')
+            raise ImportError("Cannot plot without the matplotlib package")
         plt.figure()
         xy = sorted(zip(self.x, self.smooth_result))
         x, y = zip(*xy)
-        plt.plot(x, y, '-')
-        plt.plot(self.x, self.y, '.')
+        plt.plot(x, y, "-")
+        plt.plot(self.x, self.y, ".")
         if fname:
             plt.savefig(fname)
         else:
@@ -149,8 +150,7 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
             self.cross_validated_residual = residual
 
 
-
-class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-attributes
+class BasicFixedSpanSmoother(Smoother):
     """
     A basic fixed-span smoother.
 
@@ -173,8 +173,9 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         self._update_mean_in_window()
         self._update_variance_in_window()
         for i, (xi, yi) in enumerate(zip(x, y)):
-            if ((i - self._neighbors_on_each_side) > 0.0 and
-                    (i + self._neighbors_on_each_side) < len(x)):
+            if (i - self._neighbors_on_each_side) > 0.0 and (
+                i + self._neighbors_on_each_side
+            ) < len(x):
                 self._advance_window()
             smooth_here = self._compute_smooth_during_construction(xi)
             residual_here = self._compute_cross_validated_residual_here(xi, yi, smooth_here)
@@ -223,16 +224,16 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
             while end + 1 < len(smooth) and self.x[end + 1] <= self.x[end]:
                 end += 1
             if end > start:
-                tied_mean = sum(smooth[start:end + 1]) / (end + 1 - start)
-                smooth[start:end + 1] = [tied_mean] * (end + 1 - start)
+                tied_mean = sum(smooth[start : end + 1]) / (end + 1 - start)
+                smooth[start : end + 1] = [tied_mean] * (end + 1 - start)
             start = end + 1
         return smooth
 
     def _update_values_in_window(self):
         """Update which values are in the current window."""
         window_bound_upper = self._window_bound_lower + self.window_size
-        self._x_in_window = self.x[self._window_bound_lower:window_bound_upper]
-        self._y_in_window = self.y[self._window_bound_lower:window_bound_upper]
+        self._x_in_window = self.x[self._window_bound_lower : window_bound_upper]
+        self._y_in_window = self.y[self._window_bound_lower : window_bound_upper]
 
     def _update_mean_in_window(self):
         """
@@ -259,12 +260,16 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
         _remove_observation_from_variances : fast update for single observation removal
 
         """
-        self._covariance_in_window = sum([(xj - self._mean_x_in_window) *
-                                          (yj - self._mean_y_in_window)
-                                          for xj, yj in zip(self._x_in_window, self._y_in_window)])
+        self._covariance_in_window = sum(
+            [
+                (xj - self._mean_x_in_window) * (yj - self._mean_y_in_window)
+                for xj, yj in zip(self._x_in_window, self._y_in_window)
+            ]
+        )
 
-        self._variance_in_window = sum([(xj - self._mean_x_in_window) ** 2 for xj
-                                        in self._x_in_window])
+        self._variance_in_window = sum(
+            [(xj - self._mean_x_in_window) ** 2 for xj in self._x_in_window]
+        )
 
     def _advance_window(self):
         """Update values in current window and the current window means and variances."""
@@ -291,17 +296,21 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
 
     def _add_observation_to_means(self, xj, yj):
         """Update the means without recalculating for the addition of one observation."""
-        self._mean_x_in_window = ((self.window_size * self._mean_x_in_window + xj) /
-                                  (self.window_size + 1.0))
-        self._mean_y_in_window = ((self.window_size * self._mean_y_in_window + yj) /
-                                  (self.window_size + 1.0))
+        self._mean_x_in_window = (self.window_size * self._mean_x_in_window + xj) / (
+            self.window_size + 1.0
+        )
+        self._mean_y_in_window = (self.window_size * self._mean_y_in_window + yj) / (
+            self.window_size + 1.0
+        )
 
     def _remove_observation_from_means(self, xj, yj):
         """Update the means without recalculating for the deletion of one observation."""
-        self._mean_x_in_window = ((self.window_size * self._mean_x_in_window - xj) /
-                                  (self.window_size - 1.0))
-        self._mean_y_in_window = ((self.window_size * self._mean_y_in_window - yj) /
-                                  (self.window_size - 1.0))
+        self._mean_x_in_window = (self.window_size * self._mean_x_in_window - xj) / (
+            self.window_size - 1.0
+        )
+        self._mean_y_in_window = (self.window_size * self._mean_y_in_window - yj) / (
+            self.window_size - 1.0
+        )
 
     def _add_observation_to_variances(self, xj, yj):
         """
@@ -357,6 +366,7 @@ class BasicFixedSpanSmoother(Smoother):  # pylint: disable=too-many-instance-att
             return None
         return abs((yi - smooth_here) / denom)
 
+
 class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
     """Use slow means and variances at each step. Used to validate fast updates."""
 
@@ -367,7 +377,7 @@ class BasicFixedSpanSmootherSlowUpdate(BasicFixedSpanSmoother):
         self._update_variance_in_window()
 
 
-DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother  # pylint: disable=invalid-name
+DEFAULT_BASIC_SMOOTHER = BasicFixedSpanSmoother
 
 
 def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
@@ -400,5 +410,5 @@ def perform_smooth(x_values, y_values, span=None, smoother_cls=None):
     return smoother
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

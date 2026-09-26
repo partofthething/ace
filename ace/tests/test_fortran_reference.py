@@ -14,8 +14,6 @@ import numpy
 from ace import ace, smoother, supersmoother
 from ace.tests import fortran_reference as ref
 
-# pylint: disable=missing-docstring
-
 SAMPLE_SIZES = (37, 100, 200, 500)
 TOLERANCE = 1e-9
 
@@ -30,12 +28,11 @@ def friedman82_data(num_obs, seed):
 def tied_data(num_obs, seed):
     rng = numpy.random.RandomState(seed)
     x = numpy.sort(rng.randint(0, 6, num_obs).astype(float))
-    y = x ** 2 + rng.standard_normal(num_obs)
+    y = x**2 + rng.standard_normal(num_obs)
     return x, y
 
 
 class TestSmootherAgainstFortran(unittest.TestCase):
-
     def assert_close(self, actual, expected):
         self.assertLess(numpy.max(numpy.abs(numpy.asarray(actual) - expected)), TOLERANCE)
 
@@ -82,7 +79,6 @@ class TestSmootherAgainstFortran(unittest.TestCase):
 
 
 class TestAceAgainstFortran(unittest.TestCase):
-
     def check_ace(self, x_values, y_values):
         solver = ace.ACESolver()
         solver.specify_data_set(x_values, y_values)
@@ -98,7 +94,7 @@ class TestAceAgainstFortran(unittest.TestCase):
         for num_obs in (100, 200):
             rng = numpy.random.RandomState(num_obs)
             x = numpy.cbrt(rng.standard_normal(num_obs))
-            y = numpy.exp(x ** 3 + rng.standard_normal(num_obs))
+            y = numpy.exp(x**3 + rng.standard_normal(num_obs))
             self.check_ace([x], y)
 
     def test_breiman85_example3(self):
@@ -109,5 +105,5 @@ class TestAceAgainstFortran(unittest.TestCase):
             self.check_ace([x1, x2], x1 * x2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

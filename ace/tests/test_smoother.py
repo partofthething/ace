@@ -4,7 +4,6 @@ import unittest
 
 from ace import smoother
 
-# pylint: disable=protected-access, missing-docstring
 
 class TestSmoother(unittest.TestCase):
     def setUp(self):
@@ -17,38 +16,43 @@ class TestSmoother(unittest.TestCase):
         self.smoother._update_mean_in_window()
         self.smoother._update_variance_in_window()
 
-
     def test_mean(self):
         size = self.smoother.window_size
-        self.assertAlmostEqual(self.smoother._mean_x_in_window,
-                               sum(self.x_data[:size]) / len(self.x_data[:size]))
+        self.assertAlmostEqual(
+            self.smoother._mean_x_in_window, sum(self.x_data[:size]) / len(self.x_data[:size])
+        )
 
-        self.assertAlmostEqual(self.smoother._mean_y_in_window,
-                               sum(self.y_data[:size]) / len(self.y_data[:size]))
+        self.assertAlmostEqual(
+            self.smoother._mean_y_in_window, sum(self.y_data[:size]) / len(self.y_data[:size])
+        )
 
     def test_mean_on_addition_of_observation(self):
         """Make sure things work when we add an observation."""
         self.smoother._add_observation_to_means(7, 8)
         size = self.smoother.window_size
-        self.assertAlmostEqual(self.smoother._mean_x_in_window,
-                               (sum(self.x_data[:size]) + 7.0) /
-                               (self.smoother.window_size + 1.0))
+        self.assertAlmostEqual(
+            self.smoother._mean_x_in_window,
+            (sum(self.x_data[:size]) + 7.0) / (self.smoother.window_size + 1.0),
+        )
 
-        self.assertAlmostEqual(self.smoother._mean_y_in_window,
-                               (sum(self.y_data[:size]) + 8.0) /
-                               (self.smoother.window_size + 1.0))
+        self.assertAlmostEqual(
+            self.smoother._mean_y_in_window,
+            (sum(self.y_data[:size]) + 8.0) / (self.smoother.window_size + 1.0),
+        )
 
     def test_mean_on_removal_of_observation(self):
         """Make sure things work when we remove an observation."""
         self.smoother._remove_observation_from_means(3, 6)
 
-        self.assertAlmostEqual(self.smoother._mean_x_in_window,
-                               sum(self.x_data[:2]) /
-                               (self.smoother.window_size - 1.0))
+        self.assertAlmostEqual(
+            self.smoother._mean_x_in_window,
+            sum(self.x_data[:2]) / (self.smoother.window_size - 1.0),
+        )
 
-        self.assertAlmostEqual(self.smoother._mean_y_in_window,
-                               (sum(self.y_data[:2])) /
-                               (self.smoother.window_size - 1.0))
+        self.assertAlmostEqual(
+            self.smoother._mean_y_in_window,
+            (sum(self.y_data[:2])) / (self.smoother.window_size - 1.0),
+        )
 
     def test_variance_on_removal_of_observation(self):
         """Make sure variance and covariance work when we remove an observation quickly."""
@@ -94,6 +98,7 @@ class TestSmoother(unittest.TestCase):
         # weak test. Hard to do analytically without just repeating the method
         residual = self.smoother._compute_cross_validated_residual_here(2.5, 5.6, 5.5)
         self.assertNotEqual(residual, 0.0)
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

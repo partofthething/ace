@@ -19,14 +19,14 @@ Example::
 """
 
 import numpy
+
 try:
     from matplotlib import pyplot as plt
 except ImportError:
     plt = None
 
 from . import smoother
-from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN, TWEETER_SPAN
-
+from .smoother import BASS_SPAN, DEFAULT_SPANS, MID_SPAN, TWEETER_SPAN
 
 BASS_INDEX = DEFAULT_SPANS.index(BASS_SPAN)
 # floor on the residual ratio in bass enhancement to avoid underflow (sml in supsmu.f)
@@ -38,7 +38,7 @@ class SuperSmoother(smoother.Smoother):
 
     def __init__(self):
         """Construct a SuperSmoother."""
-        super(SuperSmoother, self).__init__()
+        super().__init__()
 
         self._primary_smooths = []
         self._residual_smooths = []
@@ -60,8 +60,7 @@ class SuperSmoother(smoother.Smoother):
         if not self.x[-1] > self.x[0]:
             # all x values are the same so the best we can do is the mean.
             self.smooth_result = numpy.full(len(self.y), numpy.mean(self.y))
-            self._store_unsorted_results(self.smooth_result,
-                                         numpy.zeros(len(self.smooth_result)))
+            self._store_unsorted_results(self.smooth_result, numpy.zeros(len(self.smooth_result)))
             return
         self._compute_primary_smooths()
         self._smooth_the_residuals()
@@ -86,9 +85,9 @@ class SuperSmoother(smoother.Smoother):
         |r_{i}(J)| against xi" - [1]
         """
         for primary_smooth in self._primary_smooths:
-            smooth = smoother.perform_smooth(self.x,
-                                             primary_smooth.cross_validated_residual,
-                                             MID_SPAN)
+            smooth = smoother.perform_smooth(
+                self.x, primary_smooth.cross_validated_residual, MID_SPAN
+            )
             self._residual_smooths.append(smooth.smooth_result)
 
     def _select_best_smooth_at_each_point(self):
@@ -123,9 +122,9 @@ class SuperSmoother(smoother.Smoother):
 
     def _smooth_best_span_estimates(self):
         """Apply a MID_SPAN smooth to the best span estimates at each observation."""
-        self._smoothed_best_spans = smoother.perform_smooth(self.x,
-                                                            self._best_span_at_each_point,
-                                                            MID_SPAN)
+        self._smoothed_best_spans = smoother.perform_smooth(
+            self.x, self._best_span_at_each_point, MID_SPAN
+        )
 
     def _apply_best_spans_to_primaries(self):
         """
@@ -137,7 +136,6 @@ class SuperSmoother(smoother.Smoother):
         self.smooth_result = []
         for xi, best_span in enumerate(self._smoothed_best_spans.smooth_result):
             primary_values = [s.smooth_result[xi] for s in self._primary_smooths]
-            # pylint: disable=no-member
             best_value = numpy.interp(best_span, DEFAULT_SPANS, primary_values)
             self.smooth_result.append(best_value)
 
@@ -150,44 +148,43 @@ class SuperSmoother(smoother.Smoother):
         discussed in the publication. This step is necessary to match
         the FORTRAN version perfectly.
         """
-        smoothed_results = smoother.perform_smooth(self.x,
-                                                   self.smooth_result,
-                                                   TWEETER_SPAN)
+        smoothed_results = smoother.perform_smooth(self.x, self.smooth_result, TWEETER_SPAN)
         self.smooth_result = smoothed_results.smooth_result
+
 
 class SuperSmootherWithPlots(SuperSmoother):
     """Auxiliary subclass for researching/understanding the SuperSmoother."""
 
     def _compute_primary_smooths(self):
-        super(SuperSmootherWithPlots, self)._compute_primary_smooths()
+        super()._compute_primary_smooths()
         plt.figure()
         for smooth in self._primary_smooths:
             plt.plot(self.x, smooth.smooth_result)
-        plt.plot(self.x, self.y, '.')
-        plt.savefig('primary_smooths.png')
+        plt.plot(self.x, self.y, ".")
+        plt.savefig("primary_smooths.png")
         plt.close()
 
     def _smooth_the_residuals(self):
-        super(SuperSmootherWithPlots, self)._smooth_the_residuals()
+        super()._smooth_the_residuals()
         plt.figure()
         for residual, span in zip(self._residual_smooths, smoother.DEFAULT_SPANS):
-            plt.plot(self.x, residual, label='{0}'.format(span))
-        plt.legend(loc='upper left')
-        plt.savefig('residual_smooths.png')
+            plt.plot(self.x, residual, label=f"{span}")
+        plt.legend(loc="upper left")
+        plt.savefig("residual_smooths.png")
         plt.close()
 
     def _select_best_smooth_at_each_point(self):
-        super(SuperSmootherWithPlots, self)._select_best_smooth_at_each_point()
+        super()._select_best_smooth_at_each_point()
         plt.figure()
-        plt.plot(self.x, self._best_span_at_each_point, label='Fresh')
+        plt.plot(self.x, self._best_span_at_each_point, label="Fresh")
 
     def _enhance_bass(self):
-        super(SuperSmootherWithPlots, self)._enhance_bass()
-        plt.plot(self.x, self._best_span_at_each_point, label='Enhanced bass')
+        super()._enhance_bass()
+        plt.plot(self.x, self._best_span_at_each_point, label="Enhanced bass")
 
     def _smooth_best_span_estimates(self):
-        super(SuperSmootherWithPlots, self)._smooth_best_span_estimates()
-        plt.plot(self.x, self._smoothed_best_spans.smooth_result, label='Smoothed')
-        plt.legend(loc='upper left')
-        plt.savefig('best_spans.png')
+        super()._smooth_best_span_estimates()
+        plt.plot(self.x, self._smoothed_best_spans.smooth_result, label="Smoothed")
+        plt.legend(loc="upper left")
+        plt.savefig("best_spans.png")
         plt.close()

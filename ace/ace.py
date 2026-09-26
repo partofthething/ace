@@ -18,14 +18,14 @@ This can be used to:
 """
 
 import numpy
+
 try:
     from matplotlib import pyplot as plt
 except ImportError:
     plt = None
 
-from .supersmoother import SuperSmoother
 from .smoother import perform_smooth
-
+from .supersmoother import SuperSmoother
 
 # Iteration controls. These defaults match Friedman's mace.f
 DEFAULT_DELRSQ = 0.01
@@ -33,7 +33,7 @@ DEFAULT_MAXIT = 20
 DEFAULT_NTERM = 3
 
 
-class ACESolver(object):  # pylint: disable=too-many-instance-attributes
+class ACESolver:
     """
     The Alternating Conditional Expectation algorithm to perform regressions.
 
@@ -90,15 +90,19 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
         rsq_history = [100.0] * self.nterm
         self._outer_iters = 0
         while True:
-            print('* Starting outer iteration {0:03d}. Current R^2 = {1:12.5E}'
-                  ''.format(self._outer_iters, self.rsq))
+            print(
+                f"* Starting outer iteration {self._outer_iters:03d}. "
+                f"Current R^2 = {self.rsq:12.5E}"
+            )
             self._iterate_to_update_x_transforms()
             self._update_y_transform()
             self.rsq = 1.0 - self._compute_error()
             rsq_history[self._outer_iters % self.nterm] = self.rsq
             self._outer_iters += 1
-            if (max(rsq_history) - min(rsq_history) <= self.delrsq or
-                    self._outer_iters >= self.maxit):
+            if (
+                max(rsq_history) - min(rsq_history) <= self.delrsq
+                or self._outer_iters >= self.maxit
+            ):
                 break
 
     def _initialize(self):
@@ -180,13 +184,18 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
         """
         self._inner_iters = 0
         while True:
-            print('  Starting inner iteration {0:03d}. Current R^2 = {1:12.5E}'
-                  ''.format(self._inner_iters, self.rsq))
+            print(
+                f"  Starting inner iteration {self._inner_iters:03d}. "
+                f"Current R^2 = {self.rsq:12.5E}"
+            )
             rsq_before = self.rsq
             self._update_x_transforms()
             self._inner_iters += 1
-            if (len(self.x) == 1 or self.rsq - rsq_before <= self.delrsq or
-                    self._inner_iters >= self.maxit):
+            if (
+                len(self.x) == 1
+                or self.rsq - rsq_before <= self.delrsq
+                or self._inner_iters >= self.maxit
+            ):
                 break
 
     def _update_x_transforms(self):
@@ -248,8 +257,9 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
 
         sum_of_x_transformations_choppy = numpy.sum(sorted_xtransforms, axis=0)
         y_sorted = sort_vector(self.y, sorted_data_indices)
-        smooth = perform_smooth(y_sorted, sum_of_x_transformations_choppy,
-                                smoother_cls=self._smoother_cls)
+        smooth = perform_smooth(
+            y_sorted, sum_of_x_transformations_choppy, smoother_cls=self._smoother_cls
+        )
         sum_of_x_transformations_smooth = smooth.smooth_result
 
         sum_of_x_transformations_smooth -= numpy.mean(sum_of_x_transformations_smooth)
@@ -258,21 +268,21 @@ class ACESolver(object):  # pylint: disable=too-many-instance-attributes
         # unsort to save in the original data
         self.y_transform = unsort_vector(sum_of_x_transformations_smooth, sorted_data_indices)
 
-    def write_input_to_file(self, fname='ace_input.txt'):
+    def write_input_to_file(self, fname="ace_input.txt"):
         """Write y and x values used in this run to a space-delimited txt file."""
         self._write_columns(fname, self.x, self.y)
 
-    def write_transforms_to_file(self, fname='ace_transforms.txt'):
+    def write_transforms_to_file(self, fname="ace_transforms.txt"):
         """Write y and x transforms used in this run to a space-delimited txt file."""
         self._write_columns(fname, self.x_transforms, self.y_transform)
 
-    def _write_columns(self, fname, xvals, yvals):  # pylint: disable=no-self-use
-        with open(fname, 'w') as output_file:
+    def _write_columns(self, fname, xvals, yvals):
+        with open(fname, "w") as output_file:
             alldata = [yvals] + xvals
             for datai in zip(*alldata):
-                yline = '{0: 15.9E} '.format(datai[0])
-                xline = ' '.join(['{0: 15.9E}'.format(xii) for xii in datai[1:]])
-                output_file.write(''.join([yline, xline, '\n']))
+                yline = f"{datai[0]: 15.9E} "
+                xline = " ".join([f"{xii: 15.9E}" for xii in datai[1:]])
+                output_file.write("".join([yline, xline, "\n"]))
 
 
 def sort_vector(data, indices_of_increasing):
@@ -285,22 +295,22 @@ def unsort_vector(data, indices_of_increasing):
     return numpy.array([data[indices_of_increasing.index(i)] for i in range(len(data))])
 
 
-def plot_transforms(ace_model, fname='ace_transforms.png'):
+def plot_transforms(ace_model, fname="ace_transforms.png"):
     """Plot the transforms."""
     if not plt:
-        raise ImportError('Cannot plot without the matplotlib package')
-    plt.rcParams.update({'font.size': 8})
+        raise ImportError("Cannot plot without the matplotlib package")
+    plt.rcParams.update({"font.size": 8})
     plt.figure()
     num_cols = len(ace_model.x) // 2 + 1
     for i in range(len(ace_model.x)):
         plt.subplot(num_cols, 2, i + 1)
-        plt.plot(ace_model.x[i], ace_model.x_transforms[i], '.', label='Phi {0}'.format(i))
-        plt.xlabel('x{0}'.format(i))
-        plt.ylabel('phi{0}'.format(i))
-    plt.subplot(num_cols, 2, i + 2)  # pylint: disable=undefined-loop-variable
-    plt.plot(ace_model.y, ace_model.y_transform, '.', label='Theta')
-    plt.xlabel('y')
-    plt.ylabel('theta')
+        plt.plot(ace_model.x[i], ace_model.x_transforms[i], ".", label=f"Phi {i}")
+        plt.xlabel(f"x{i}")
+        plt.ylabel(f"phi{i}")
+    plt.subplot(num_cols, 2, i + 2)
+    plt.plot(ace_model.y, ace_model.y_transform, ".", label="Theta")
+    plt.xlabel("y")
+    plt.ylabel("theta")
     plt.tight_layout()
 
     if fname:
@@ -308,18 +318,19 @@ def plot_transforms(ace_model, fname='ace_transforms.png'):
         return None
     return plt
 
-def plot_input(ace_model, fname='ace_input.png'):
+
+def plot_input(ace_model, fname="ace_input.png"):
     """Plot the transforms."""
     if not plt:
-        raise ImportError('Cannot plot without the matplotlib package')
-    plt.rcParams.update({'font.size': 8})
+        raise ImportError("Cannot plot without the matplotlib package")
+    plt.rcParams.update({"font.size": 8})
     plt.figure()
     num_cols = len(ace_model.x) // 2 + 1
     for i in range(len(ace_model.x)):
         plt.subplot(num_cols, 2, i + 1)
-        plt.plot(ace_model.x[i], ace_model.y, '.')
-        plt.xlabel('x{0}'.format(i))
-        plt.ylabel('y')
+        plt.plot(ace_model.x[i], ace_model.y, ".")
+        plt.xlabel(f"x{i}")
+        plt.ylabel("y")
 
     plt.tight_layout()
 

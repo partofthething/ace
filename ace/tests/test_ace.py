@@ -9,7 +9,6 @@ import unittest
 import ace.ace
 import ace.samples.breiman85
 
-# pylint: disable=protected-access, missing-docstring
 
 class TestAce(unittest.TestCase):
     """Tests."""

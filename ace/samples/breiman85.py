@@ -11,7 +11,7 @@ def build_sample_ace_problem_breiman85(N=200):
     x_cubed = numpy.random.standard_normal(N)
     x = scipy.special.cbrt(x_cubed)
     noise = numpy.random.standard_normal(N)
-    y = numpy.exp((x ** 3.0) + noise)
+    y = numpy.exp((x**3.0) + noise)
     return [x], y
 
 
@@ -30,10 +30,11 @@ def run_breiman85():
     ace_solver.specify_data_set(x, y)
     ace_solver.solve()
     try:
-        ace.plot_transforms(ace_solver, 'sample_ace_breiman85.png')
+        ace.plot_transforms(ace_solver, "sample_ace_breiman85.png")
     except ImportError:
         pass
     return ace_solver
+
 
 def run_breiman2():
     """Run Breiman's other sample problem."""
@@ -51,16 +52,16 @@ def run_breiman2():
     offset, scale = numpy.mean(log_y), numpy.std(log_y)
     x_sorted = numpy.sort(x[0])
     plt.subplot(1, 2, 1)
-    plt.plot(x_sorted, numpy.sin(2.0 * numpy.pi * x_sorted) / scale, label='analytic')
+    plt.plot(x_sorted, numpy.sin(2.0 * numpy.pi * x_sorted) / scale, label="analytic")
     plt.legend()
     plt.subplot(1, 2, 2)
     y_sorted = numpy.sort(y)
-    plt.plot(y_sorted, (numpy.log(y_sorted) - offset) / scale, label='analytic')
-    plt.legend(loc='lower right')
-    plt.savefig('sample_ace_breiman85_2.png')
+    plt.plot(y_sorted, (numpy.log(y_sorted) - offset) / scale, label="analytic")
+    plt.legend(loc="lower right")
+    plt.savefig("sample_ace_breiman85_2.png")
 
     return ace_solver
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_breiman2()

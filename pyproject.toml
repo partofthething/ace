@@ -38,7 +38,7 @@ test = [
     "pytest-cov>=2.3.1",
     "pytest-timeout>=1.2.0",
 ]
-lint = ["pylint", "pydocstyle"]
+lint = ["ruff"]
 docs = ["sphinx", "sphinx-rtd-theme", "numpydoc>=0.1", "matplotlib>=1.0"]
 
 [project.urls]
@@ -54,3 +54,21 @@ include = ["ace*"]
 
 [tool.pytest.ini_options]
 testpaths = ["ace/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+extend-exclude = ["tmp_images"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "D"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ace"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"ace/tests/*" = ["D"]
+"doc/conf.py" = ["D", "E402"]
