@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ace"
-version = "0.4.0"
+version = "0.4.1"
 description = "Non-parametric multivariate regressions by Alternating Conditional Expectations"
 readme = "README.rst"
 license = "MIT"
