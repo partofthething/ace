@@ -1,6 +1,12 @@
 History/Changelog
 =================
 
+0.4.2
+-----
+- Faster ``ACESolver.solve`` on large data sets (about 4x at 10,000 observations):
+  un-sorting transforms is no longer quadratic, and the fixed-span smoother no longer
+  copies its window on every step. Results are unchanged.
+
 0.4.0
 -----
 - Match Friedman's FORTRAN mace/supsmu exactly: fixed-span window rounding,
