@@ -82,12 +82,30 @@ class TestSmoother(unittest.TestCase):
         self.assertAlmostEqual(var_from_update, self.smoother._variance_in_window)
 
     def test_advance_window(self):
-        self.assertIn(1.0, self.smoother._x_in_window)
+        """Make sure fast updates while advancing match a full recompute of the new window."""
         lowerbound = self.smoother._window_bound_lower
         self.smoother._advance_window()
         self.assertEqual(lowerbound + 1, self.smoother._window_bound_lower)
+        fast = (
+            self.smoother._mean_x_in_window,
+            self.smoother._mean_y_in_window,
+            self.smoother._covariance_in_window,
+            self.smoother._variance_in_window,
+        )
+
+        self.smoother._update_values_in_window()
         self.assertNotIn(1.0, self.smoother._x_in_window)
         self.assertIn(4.0, self.smoother._x_in_window)
+        self.smoother._update_mean_in_window()
+        self.smoother._update_variance_in_window()
+        slow = (
+            self.smoother._mean_x_in_window,
+            self.smoother._mean_y_in_window,
+            self.smoother._covariance_in_window,
+            self.smoother._variance_in_window,
+        )
+        for fast_val, slow_val in zip(fast, slow, strict=True):
+            self.assertAlmostEqual(fast_val, slow_val)
 
     def test_compute_smooth_during_construction(self):
         # test data is linear, so we just make sure we're on the line

@@ -274,12 +274,18 @@ class BasicFixedSpanSmoother(Smoother):
         )
 
     def _advance_window(self):
-        """Update values in current window and the current window means and variances."""
-        x_to_remove, y_to_remove = self._x_in_window[0], self._y_in_window[0]
+        """
+        Slide the window up by one observation, quickly updating means and variances.
 
+        Only the observations leaving and entering the window are looked up;
+        ``_x_in_window`` and ``_y_in_window`` are not refreshed (that would copy the
+        whole window on every step).
+        """
+        window_bound_lower = self._window_bound_lower
+        window_bound_upper = window_bound_lower + self.window_size
+        x_to_remove, y_to_remove = self.x[window_bound_lower], self.y[window_bound_lower]
+        x_to_add, y_to_add = self.x[window_bound_upper], self.y[window_bound_upper]
         self._window_bound_lower += 1
-        self._update_values_in_window()
-        x_to_add, y_to_add = self._x_in_window[-1], self._y_in_window[-1]
 
         self._remove_observation(x_to_remove, y_to_remove)
         self._add_observation(x_to_add, y_to_add)

@@ -290,12 +290,15 @@ class ACESolver:
 
 def sort_vector(data, indices_of_increasing):
     """Permutate 1-d data using given indices."""
-    return numpy.array([data[i] for i in indices_of_increasing])
+    return numpy.asarray(data)[indices_of_increasing]
 
 
 def unsort_vector(data, indices_of_increasing):
     """Upermutate 1-D data that is sorted by indices_of_increasing."""
-    return numpy.array([data[indices_of_increasing.index(i)] for i in range(len(data))])
+    data = numpy.asarray(data)
+    unsorted = numpy.empty_like(data)
+    unsorted[indices_of_increasing] = data
+    return unsorted
 
 
 def plot_transforms(ace_model, fname="ace_transforms.png"):
