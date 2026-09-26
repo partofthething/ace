@@ -1,6 +1,18 @@
 History/Changelog
 =================
 
+0.4.0
+-----
+- Match Friedman's FORTRAN mace/supsmu exactly: fixed-span window rounding,
+  near-zero-variance windows, cross-validated residual guard, tied x values,
+  and mace's initialization, update acceptance, and convergence criteria
+- ``ACESolver`` takes ``delrsq``, ``maxit``, and ``nterm`` arguments; removed ``MAX_OUTERS``
+- Updated second Breiman85 sample to match the paper
+- Removed deprecated ``pkg_resources`` usage for the version
+- matplotlib is now optional for the smoothers (``pip install ace[plot]``)
+- Packaging moved to ``pyproject.toml``; removed ``setup.py`` and requirements files
+- Dropped support for Python 2 and Python < 3.8
+
 0.3-3
 -----
 - Fix invalid integer division (#16)

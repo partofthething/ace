@@ -19,7 +19,10 @@ Example::
 """
 
 import numpy
-from matplotlib import pyplot as plt
+try:
+    from matplotlib import pyplot as plt
+except ImportError:
+    plt = None
 
 from . import smoother
 from .smoother import DEFAULT_SPANS, MID_SPAN, BASS_SPAN, TWEETER_SPAN

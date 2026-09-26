@@ -37,21 +37,19 @@ turns out to be a powerful difference.
 Installing it
 -------------
 ace is available in the `Python Package Index <https://pypi.python.org/pypi/ace/>`_,
-and can be installed simply with the following.
-
-On Linux::
-
-	sudo pip install ace
-
-On Windows, use::
+and can be installed simply with the following (Python 3.8+)::
 
 	pip install ace
+
+To also get plotting support (matplotlib)::
+
+	pip install "ace[plot]"
 
 Directly from source::
 
 	git clone git@github.com:partofthething/ace.git
 	cd ace
-	python setup.py install
+	pip install .
 
 .. note::
 
@@ -59,9 +57,10 @@ Directly from source::
 	`here <https://github.com/partofthething/ace/archive/master.zip>`_.
 
 You can verify that the installation completed successfully by running the automated test
-suite in the install directory::
+suite from the source directory::
 
-	python -m unittest discover -bv
+	pip install ".[test]"
+	pytest
 
 Using it
 --------

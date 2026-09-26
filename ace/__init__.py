@@ -23,30 +23,4 @@ For some plotting (matplotlib required), try::
 
 """
 
-import os.path
-from pkg_resources import get_distribution, DistributionNotFound
-
-def _get_version():
-    """
-    Groan single sourcing versions is a huge pain.
-
-    For now we have to manually sync it between here and setup.py (for doc build)
-
-    https://packaging.python.org/guides/single-sourcing-package-version/
-    """
-    try:
-        _dist = get_distribution('ace')
-        # Normalize case for Windows systems
-        _dist_loc = os.path.normcase(_dist.location)  # pylint: disable=no-member
-        _here = os.path.normcase(__file__)
-        if not _here.startswith(os.path.join(_dist_loc, 'ace')):
-            # not installed, but there is another version that *is*
-            raise DistributionNotFound
-    except DistributionNotFound:
-        version = '0.3.2'
-    else:
-        version = _dist.version  # pylint: disable=no-member
-
-    return version
-
-__version__ = _get_version()
+__version__ = '0.4.0'

@@ -20,7 +20,10 @@ Example::
 """
 
 import numpy
-import matplotlib.pyplot as plt
+try:
+    from matplotlib import pyplot as plt
+except ImportError:
+    plt = None
 
 TWEETER_SPAN = 0.05
 MID_SPAN = 0.2
@@ -114,6 +117,8 @@ class Smoother(object):  # pylint: disable=too-many-instance-attributes
             name of file to produce. If none, will show interactively.
 
         """
+        if not plt:
+            raise ImportError('Cannot plot without the matplotlib package')
         plt.figure()
         xy = sorted(zip(self.x, self.smooth_result))
         x, y = zip(*xy)

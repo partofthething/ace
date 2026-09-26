@@ -1,4 +1,0 @@
-numpy>=1.0
-scipy>=0.12
-numpydoc>=0.1
-matplotlib>=1.0

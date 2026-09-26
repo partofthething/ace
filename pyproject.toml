@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ace"
+dynamic = ["version"]
+description = "Non-parametric multivariate regressions by Alternating Conditional Expectations"
+readme = "README.rst"
+license = { text = "MIT" }
+authors = [{ name = "Nick Touran", email = "ace@partofthething.com" }]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.15",
+    "scipy>=0.17",
+]
+keywords = ["regression", "ace", "multivariate", "statistics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=1.0"]
+test = [
+    "pytest>=2.9.2",
+    "pytest-cov>=2.3.1",
+    "pytest-timeout>=1.2.0",
+]
+lint = ["pylint", "pydocstyle"]
+docs = ["sphinx", "sphinx-rtd-theme", "numpydoc>=0.1", "matplotlib>=1.0"]
+
+[project.urls]
+Homepage = "https://github.com/partofthething/ace"
+Documentation = "http://partofthething.com/ace"
+Changelog = "https://github.com/partofthething/ace/blob/master/HISTORY.rst"
+
+[tool.setuptools.dynamic]
+version = { attr = "ace.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["ace*"]
+
+[tool.pytest.ini_options]
+testpaths = ["ace/tests"]
