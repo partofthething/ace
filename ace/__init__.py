@@ -18,7 +18,7 @@ and run::
 For some plotting (matplotlib required), try::
 
     from ace import ace
-    ace.plot_transforms(myace, fname = 'mytransforms.pdf')
+    ace.plot_transforms(myace.ace, fname = 'mytransforms.pdf')
     myace.ace.write_transforms_to_file(fname = 'mytransforms.txt')
 
 """

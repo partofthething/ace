@@ -1,7 +1,8 @@
 """
 A few validation problems to make sure the smoothers are working as expected.
 
-These depend on the supsmu module, which was created using f2py from Breiman's supsmu.f
+These depend on the ``mace`` module, which was created using f2py from Friedman's FORTRAN
+source (supsmu.f and friends).
 """
 
 import matplotlib.pyplot as plt

@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path("..").resolve()))
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "numpydoc",
@@ -270,3 +271,42 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+
+# -- API docs -------------------------------------------------------------
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+}
+
+autodoc_member_order = "bysource"
+autodoc_default_options = {"members": True, "undoc-members": True, "show-inheritance": True}
+# The mace module used by validation is a local f2py build; don't require it for the docs.
+autodoc_mock_imports = ["mace"]
+# Don't generate an autosummary table of members on top of the full autodoc output.
+numpydoc_show_class_members = False
+
+
+def run_apidoc(_app):
+    """Regenerate the API reference stubs from the package on every build."""
+    from sphinx.ext import apidoc
+
+    here = Path(__file__).resolve().parent
+    package = here.parent / "ace"
+    apidoc.main(
+        [
+            "--force",
+            "--module-first",
+            "--separate",
+            "--no-toc",
+            "-o",
+            str(here / "apidoc"),
+            str(package),
+            str(package / "tests"),
+        ]
+    )
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)

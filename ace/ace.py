@@ -1,5 +1,5 @@
 r"""
-The Alternating Condtional Expectation (ACE) algorithm.
+The Alternating Conditional Expectation (ACE) algorithm.
 
 ACE was invented by L. Breiman and J. Friedman [Breiman85]_. It is a powerful
 way to perform multidimensional regression without assuming

@@ -22,3 +22,4 @@ MANIFEST
 ace/tests/*.txt
 *.swp
 .tox
+uv.lock
