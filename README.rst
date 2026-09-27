@@ -161,11 +161,11 @@ References
    `[Link1] <http://www.jstor.org/discover/10.2307/2288477?uid=2&uid=4&sid=21104902100507>`_
 
 .. [Friedman82] J. H. FRIEDMAN and W. STUETZLE, "Smoothing of scatterplots," ORION-003, Stanford
-   University, (1982). `[Link2] <http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-pub-3013.pdf>`_
+   University, (1982). `[Link2] <https://purl.stanford.edu/rk479vx9002>`_
 
 .. [Wang04] D. WANG and M. MURPHY, "Estimating optimal transformations for multiple regression using the
    ACE algorithm," Journal of Data Science, 2, 329 (2004).
-   `[Link3] <http://www.jds-online.com/files/JDS-156.pdf>`_
+   `[Link3] <https://pdfs.semanticscholar.org/b458/666c9cf82dd0d316b0483eb013bcb0629490.pdf>`_
 
 .. [Touran12] N. TOURAN, "A Modal Expansion Equilibrium Cycle Perturbation Method for
    Optimizing High Burnup Fast Reactors," Ph.D. dissertation, Univ. of Michigan, (2012).
