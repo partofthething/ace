@@ -120,8 +120,8 @@ A longer version of this demo is available in the
 Other details
 -------------
 This implementation of ACE isn't as fast as the original FORTRAN version, but it can
-still crunch through a problem with 5 independent variables having 1000 observations each
-in on the order of 15 seconds. Not bad.
+still crunch through a problem with 5 independent variables having 10000 observations each
+in on the order of 4 seconds. Not bad.
 
 ace also contains a pure-Python implementation of Friedman's SuperSmoother [Friedman82]_,
 the variable-span smoother mentioned above. This can be useful on its own
